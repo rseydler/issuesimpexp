@@ -1,3 +1,60 @@
 .viewer-container {
   height: calc(100vh - 50px);
 }
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-body {
+  display: flex;
+  flex-grow: 1;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.app-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: 22px 32px;
+}
+
+.app-toolbar {
+  display: flex;
+  justify-content: space-between;
+}
+
+.app-edit {
+  fill: var(--iui-icons-color-actionable);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 30s linear;
+  }
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
