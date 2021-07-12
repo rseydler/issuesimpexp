@@ -33,7 +33,7 @@ IMJS_AUTH_CLIENT_SCOPES = "email openid profile organization assets:modify asset
 */
 
     const scope = "email openid profile organization assets:modify assets:read connections:modify connections:read context-registry-service:read-only forms:modify forms:read general-purpose-imodeljs-backend imodelhub imodeljs-router imodels:modify imodels:read insights:read issues:modify issues:read library:read product-settings-service projects:modify projects:read projectwise-share rbac-user:external-client realitydata:read storage:modify storage:read urlps-third-party users:read validation:modify validation:read";
-    const clientId = "spa-uqhpUbc1pk70uNDmr7lG8nHRR";
+    const clientId = "spa-xbXROps01bjtnyzjy1Z76aHWO";
     const redirectUri = "https://issuesimpexp.herokuapp.com/signin-callback";
     const postSignoutRedirectUri = "https://issuesimpexp.herokuapp.com/logout";
 
