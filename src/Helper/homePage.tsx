@@ -35,7 +35,7 @@ function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType }:hom
     }
     //right we have enough lets make some buttons!
     info.push(<h2>Please select from the following option</h2>)
-    info.push(<Button size="large" key="Export Button" name="Export Button" onClick={() => ExcelExporter.exportIssuesToExcel(selectedFormsId, selectedProjectId,selectedFormsType, checked)}>Create Excel for defintion / Export Issues</Button>);
+    info.push(<Button size="large" key="Export Button" name="Export Button" onClick={() => ExcelExporter.exportIssuesToExcel(selectedFormsId, selectedProjectId,selectedFormsType, checked)}>Export Issues</Button>);
     info.push(<Checkbox label="Export Comments" defaultChecked={checked} key="export comments" onChange={() => setChecked(!checked)} />)
    /* info.push(<Button size="large" key="Upload Excel" name="Upload Excel" onClick={() => ExcelExporter.tester()}>Upload Excel</Button>);
     info.push(<Button size="large" key="Export Tester" name="Export Tester" onClick={() => ExcelExporter.exportIssuesToExcel(selectedFormsId, selectedProjectId,selectedFormsType, checked)}>Export Tester</Button>);
