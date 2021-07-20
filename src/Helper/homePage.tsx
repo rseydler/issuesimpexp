@@ -8,7 +8,7 @@ import {SvgHelpCircularHollow,SvgNotification, SvgAdd,SvgDelete, SvgFlag, SvgHom
 import { ExcelExporter } from './excelExport';
 import { ExcelImporter } from './excelImport';
 import logo from './logo.svg';
-import { IntlFormatter } from '@bentley/ui-components';
+
 
 interface homePageStuff{
   selectedProjectId:string;
