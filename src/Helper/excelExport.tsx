@@ -2,6 +2,7 @@ import * as Excel from 'exceljs';
 import { saveAs } from 'file-saver'
 import { url } from 'inspector';
 import { IMSLoginProper } from './IMSLoginProper';
+import React from 'react';
 
 export class ExcelExporter{
 
@@ -12,15 +13,21 @@ export class ExcelExporter{
         return;
     }
 
-    public static async exportIssuesToExcel(formTemplateId:string, projectId:string, formType:string, exportComments:boolean){
+    public static async exportIssuesToExcel(formTemplateId:string, projectId:string, formType:string, exportComments:boolean, statusUpdates:any, logger:any){
         // get all the issues related to the formType
         // this is quicker than looping through every issue on the project
         // as you cannot filter directly on the "template" id used :(
         const formTypeFormsMatch:any[] = [];
+        const loggingData:JSX.Element[] = [];
         var formTypeLooper = true; //used to force the initial call;
+        statusUpdates("Grabbing up to date token");
+        loggingData.push(<div><h1>Logger results</h1></div>);
+        loggingData.push(<div>Grabbing up to date token</div>);
         const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
         var urlToQuery : string = `https://api.bentley.com/issues/?top=50&projectId=${projectId}&type=${formType}`;
         while (formTypeLooper) {
+            statusUpdates("Looking through issues...");
+            loggingData.push(<div>Looking through issues...</div>);
             const response = await fetch(urlToQuery, {
                 mode: 'cors',
                 headers: {
@@ -43,16 +50,19 @@ export class ExcelExporter{
                 formTypeLooper = false;
             }
         }
-        console.log("Matched ", formTypeFormsMatch.length);
 
         if (!(formTypeFormsMatch.length > 0))
         {
+            statusUpdates("No exportable form instances found");
+            loggingData.push(<div>No exportable form instances found</div>);
             alert("No exportable form instances found");
             return;
         }
         
         //continuing on create up or excel.
         // fixed header structure -
+        statusUpdates("Building excel template...");
+        loggingData.push(<div>Building excel template...</div>);
         const wb = new Excel.Workbook();
         var ws = wb.addWorksheet("IRS");
         var currCol = 1;
@@ -101,7 +111,8 @@ export class ExcelExporter{
         // this is the only way you can actually figure out what controls are on the form
         // and the access keys to formulate for an upload.... very costly! :(
         for(const typeMatchId of formTypeFormsMatch) {
-            console.log("working on form:", typeMatchId);
+            statusUpdates(`Checking form ${typeMatchId.id}`);
+            loggingData.push(<div>Checking form {typeMatchId.id}</div>);
             const response = await fetch(`https://api.bentley.com/issues/${typeMatchId.id}`, {
                 mode: 'cors',
                 headers: {
@@ -113,8 +124,9 @@ export class ExcelExporter{
             const json = await data.json();
             if (formTemplateId === json.issue.formId)
             {
-                console.log("Match");
                 currRow++;
+                statusUpdates(`Exporting form to excel row: ${currRow}`);
+                loggingData.push(<div>Exporting form to excel row: {currRow}</div>);
                 gotData = true;
                 if ("id" in json.issue){
                     ws.getCell(currRow, 1).value = json.issue.id;
@@ -294,6 +306,8 @@ export class ExcelExporter{
 
                     // assignee get some extra treatment...
                     if ("id" in json.issue.assignee){
+                        statusUpdates(`Exporting form to excel row: ${currRow} Supplementing assignee data`);
+                        loggingData.push(<div>Exporting form to excel row: {currRow} Supplementing assignee data</div>);
                         const usersEmail = await ExcelExporter.getUsersEmailFromGuid(json.issue.assignee.id, projectId);
                         if (usersEmail === "0")
                         {
@@ -326,16 +340,18 @@ export class ExcelExporter{
 
                 if ("state" in json.issue){
                     ws.getCell(currRow, 25).value = json.issue.state;
-                    console.log(ws.getCell(1, 25).note,(ws.getCell(1, 25).note === undefined))
+                   // console.log(ws.getCell(1, 25).note,(ws.getCell(1, 25).note === undefined))
                     if (ws.getCell(1, 25).note === undefined)
                     {
                         ws.getCell(1, 25).note = typeof json.issue.state;
                     }
                 }
-                console.log(json.issue);
+               // console.log(json.issue);
                 // assignees get some extra treatment
                 if ("assignees" in json.issue){
-                    console.log("assigneesssss", json.issue.assignees);
+                    statusUpdates(`Exporting form to excel row: ${currRow} Supplementing assignees data`);
+                    loggingData.push(<div>Exporting form to excel row: {currRow} Supplementing assignees data</div>);
+                    //console.log("assigneesssss", json.issue.assignees);
                     // assignees is an array (well should be!)
                     var strAssignees = "";
                     for (var i = 0; i < json.issue.assignees.length; i++)
@@ -359,13 +375,19 @@ export class ExcelExporter{
                 // user properties. things get dynamic from here.
                 if ("properties" in json.issue)
                 {
-                    for (const property in json.issue.properties)
+                    for (var property in json.issue.properties)
                     {
+                        statusUpdates(`Exporting form to excel row: ${currRow} Dumping user properties`);
+                        loggingData.push(<div>Exporting form to excel row: {currRow} Dumping user properties</div>);
                         var colNum = 0;
-                        console.log(property, json.issue.properties[property]);
-
+                      //  console.log(property, json.issue.properties[property]);
                         for (var x = userPropsStartAtCol; x <= currCol; x++){
-                            if (ws.getCell(1,x).value === "properties." + property){
+                            var header = property;
+                            if(header.includes("__x0020__"))
+                            {
+                                header = header.replace("__x0020__"," ");
+                            }
+                            if (ws.getCell(1,x).value === "properties." + header){
                                 ws.getCell(currRow,x).value = json.issue.properties[property]
                                 colNum = x;
                                 x = currCol + 1;
@@ -373,11 +395,18 @@ export class ExcelExporter{
                         }
 
                         if (colNum === 0){
-                            ws.getCell(1,currCol).value = "properties." + property;
+                            var header = property;
+                            if(header.includes("__x0020__"))
+                            {
+                                header = header.replace("__x0020__"," ");
+                            }
+                            ws.getCell(1,currCol).value = "properties." + header;
+                         //   console.log(`Adding property to excel named ${header}` );
+                         //   console.log("properties." + header);
                             ws.getCell(currRow, currCol).value = json.issue.properties[property];
                             if (ws.getCell(1,currCol).note === undefined){
                                 ws.getCell(1,currCol).note = typeof json.issue.properties[property];
-                                console.log ("property typeof=",typeof json.issue.properties[property]);
+                                //console.log ("property typeof=",typeof json.issue.properties[property]);
                             }
                             currCol++;
                         }
@@ -391,16 +420,26 @@ export class ExcelExporter{
             }
 
         }
+        // double check we go some data
+        if (gotData === false){
+            statusUpdates("No exportable form instances were found");
+            loggingData.push(<div>No exportable form instances were found</div>);
+            alert("No exportable form instances were found");
+            logger(loggingData);
+            return;
+        }
 
         // all forms have been matched and exported.
         // check to see if we need to export comments also
-        if (exportComments)
-        {
+        if (gotData && exportComments)
+        { //new__x0020__number
             //loop through the forms in column a and get the comments from the API.
             var lastCol = currCol-1;
             var x = 2;
             while (!(ws.getCell(x,1).value === null))
             {
+                statusUpdates(`Exporting form to excel row: ${x} checking for comment data`);
+                loggingData.push(<div>Exporting form to excel row: {x} checking for comment data</div>);
                 currCol = lastCol;
                 const response = await fetch(`https://api.bentley.com/issues/${ws.getCell(x,1).value}/comments`, {
                     mode: 'cors',
@@ -412,6 +451,8 @@ export class ExcelExporter{
                 const data = await response;
                 const json = await data.json();
                 if ("comments" in json){
+                    statusUpdates(`Exporting form to excel row: ${x} adding in comment data`);
+                    loggingData.push(<div>Exporting form to excel row: {x} adding in comment data</div>);
                     for (var i =0; i < json.comments.length; i++){
                         currCol++;
                         ws.getCell(x,currCol).value=json.comments[i].authorDisplayName + "|" + json.comments[i].createdDateTime + "|" + json.comments[i].text;
@@ -424,35 +465,14 @@ export class ExcelExporter{
         }
 
         //Lastly kick off the download
-        //alert("Done");
+        statusUpdates("Sending you the excel result");
+        loggingData.push(<div>Sending you the excel result</div>);
+        logger(loggingData);
         ExcelExporter.downloadExportedIssues(wb);
-        
-/*
-displayName: "PUN-00044"
-id: "DS7VKuc8d0GucaK-p9ox3xjVmAwpGB5Hkj1yYfc7ZrE"
-state: "Open"
-subject: "XXXX"
-type: "Punchlist"
-*/
-/*
-        const wb = new Excel.Workbook();
-
-        var ws = wb.addWorksheet('Export');
-        ws.getCell('A1').value = 7;
-        ws.getCell('B1').value = 'Hello, World!';
-        ws.getCell(1,3).value = "You can use numbers too";
-        ws.getCell(1,3).note="This is a note";
-        ws.getCell(2,2).value = "This was done without file-saver";
-
-
-        ExcelExporter.downloadExportedIssues(wb);
-
-
-    */
         return;
     }
 
-    private static async getUsersEmailFromGuid(userGuid:string, projectId:string){
+    public static async getUsersEmailFromGuid(userGuid:string, projectId:string){
         const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
         const response = await fetch(`https://api.bentley.com/projects/${projectId}/members/${userGuid}`, {
                 mode: 'cors',
@@ -461,7 +481,7 @@ type: "Punchlist"
                     'Authorization': accessToken,
                   },
             })
-            console.log("queried for use ", `https://api.bentley.com/projects/${projectId}/members/${userGuid}`);
+         //   console.log("queried for use ", `https://api.bentley.com/projects/${projectId}/members/${userGuid}`);
             const data = await response;
             if (data.status === 404)
             {
@@ -469,7 +489,7 @@ type: "Punchlist"
                 return "0";
             }
             const json = await data.json();
-            console.log("member ",json);
+         //   console.log("member ",json);
             if ("member" in json){
                 if ("email" in json.member)
                 {
