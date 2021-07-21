@@ -37,6 +37,13 @@ export class ExcelExporter{
             })
             const data = await response;
             const json = await data.json();
+            if (data.status === 500){
+                //api failure somewhere!
+                statusUpdates(`Bentley had a server failure. Try again later.`);
+                loggingData.push(<div>Bentley had a server failure. Try again later.</div>);
+                logger(loggingData);
+                return;
+            }
             json.issues.forEach((id: string) => {
                 formTypeFormsMatch.push(id);
             });
@@ -122,6 +129,13 @@ export class ExcelExporter{
             })
             const data = await response;
             const json = await data.json();
+            if (data.status === 500){
+                //api failure somewhere!
+                statusUpdates(`Bentley had a server failure. Try again later.`);
+                loggingData.push(<div>Bentley had a server failure. Try again later.</div>);
+                logger(loggingData);
+                return;
+            }
             if (formTemplateId === json.issue.formId)
             {
                 currRow++;
@@ -375,10 +389,10 @@ export class ExcelExporter{
                 // user properties. things get dynamic from here.
                 if ("properties" in json.issue)
                 {
+                    statusUpdates(`Exporting form to excel row: ${currRow} Dumping user properties`);
+                    loggingData.push(<div>Exporting form to excel row: {currRow} Dumping user properties</div>);
                     for (var property in json.issue.properties)
                     {
-                        statusUpdates(`Exporting form to excel row: ${currRow} Dumping user properties`);
-                        loggingData.push(<div>Exporting form to excel row: {currRow} Dumping user properties</div>);
                         var colNum = 0;
                       //  console.log(property, json.issue.properties[property]);
                         for (var x = userPropsStartAtCol; x <= currCol; x++){
@@ -450,6 +464,13 @@ export class ExcelExporter{
                 })
                 const data = await response;
                 const json = await data.json();
+                if (data.status === 500){
+                    //api failure somewhere!
+                    statusUpdates(`Bentley had a server failure. Try again later.`);
+                    loggingData.push(<div>Bentley had a server failure. Try again later.</div>);
+                    logger(loggingData);
+                    return;
+                }
                 if ("comments" in json){
                     statusUpdates(`Exporting form to excel row: ${x} adding in comment data`);
                     loggingData.push(<div>Exporting form to excel row: {x} adding in comment data</div>);
@@ -488,6 +509,7 @@ export class ExcelExporter{
                 //most likely a role, or use has been ejected :(
                 return "0";
             }
+            
             const json = await data.json();
          //   console.log("member ",json);
             if ("member" in json){

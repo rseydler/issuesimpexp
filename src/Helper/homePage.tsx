@@ -1,13 +1,8 @@
 // @ts-nocheck
-//import { Button } from '@bentley/ui-core';
-import { ImageCheckBox } from '@bentley/ui-core';
 import {Button,  Checkbox , CheckboxProps} from '@itwin/itwinui-react';
 import React, { useCallback, useState } from 'react'
-import { useEffect } from 'react'
-import {SvgHelpCircularHollow,SvgNotification, SvgAdd,SvgDelete, SvgFlag, SvgHome,SvgNetwork, SvgSearch, SvgSettings, SvgExport, SvgImport} from "@itwin/itwinui-icons-react";
 import { ExcelExporter } from './excelExport';
 import { ExcelImporter } from './excelImport';
-import logo from './logo.svg';
 
 
 interface homePageStuff{
@@ -25,10 +20,6 @@ function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType }:hom
   const [doing, setDoing] = useState("");
   const [logger, setLogger] = useState<JSX.Element[]>([]);
   //logger stuff
-  const toLog = [];
-  useEffect(() => {
-
-  },[doing])
 
     projId = selectedProjectId;
     formId = selectedFormsId;
@@ -37,12 +28,12 @@ function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType }:hom
  
     if (selectedProjectId.trim() === "")
     {
-        info.push(<div>Please select a project to begin</div>);
+        info.push(<div key="comments1">Please select a project to begin</div>);
         return(<div>{info}</div>)
     }
     if (selectedFormsId.trim() === "")
     {
-        info.push(<div>Please select a form definition</div>);
+        info.push(<div key="comments2">Please select a form definition</div>);
         return(<div>{info}</div>)
     }
 
@@ -69,14 +60,14 @@ function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType }:hom
     }
 
     //right we have enough lets make some buttons!
-    info.push(<h2>Please select from the following options</h2>)
+    info.push(<h2 key="h2">Please select from the following options</h2>)
     info.push(<Button size="large" key="Export Button" name="Export Button" onClick={() => ExcelExporter.exportIssuesToExcel(selectedFormsId, selectedProjectId,selectedFormsType, checked, setDoing, setLogger)}>Export Issues</Button>);
     info.push(<Checkbox label="Export Comments" defaultChecked={checked} key="export comments" onChange={() => setChecked(!checked)} />)
-    info.push(<br></br>);
+    info.push(<br key="br"></br>);
     info.push(<Button size="large" input="file" key="Upload Excel" name="Upload Excel" onClick={() => clickFileButton()}>Upload Excel</Button>);
-    info.push(<p></p>);
+    info.push(<p key="p"></p>);
     info.push(<Button size="small" key="Clean Logger" name="Clean Logger" onClick={() => setLogger([<div></div>])}>Clear Log Display</Button>);
-    info.push(<input hidden={true} type="file" id="input" onClick={() => {resetFileSelected()}} onChange={() => {startExelImport()}}/>)
+    info.push(<input hidden={true} key="hidden button" type="file" id="input" onClick={() => {resetFileSelected()}} onChange={() => {startExelImport()}}/>)
    
   return (
     <div>

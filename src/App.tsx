@@ -25,8 +25,7 @@ const App: React.FC = () => {
   const [homeFlag, sethomeFlag] = useState(true);
   const [settingsFlag, setsettingsFlag] = useState(false);
   const [sideBarChosen, setsideBarChosen] = useState(0);
-  const [bodyData, setbodyData] = React.useState<JSX.Element[]>([]);
-
+  const [bodyData, setbodyData] = useState<JSX.Element[]>([]);
 //#region  LoginStuff
 
   useEffect(() => {
@@ -116,16 +115,15 @@ const recentProject = useCallback((close: () => void) => {
 },[isAuthorized, BC1Details])
 
 //handle the change to breadcrumb1
-const handleProjectInputChange = useCallback(value => {
+ const handleProjectInputChange = useCallback(value => {
   setBC2Details({displayName: "Loading...." ,type: "Won't be a moment" , formId:"" ,status: "", proJid: ""});
   ProjectData.getProjectData(value).then(projData => {
     setBC1Details({name: projData.projectNumber ,description: projData.displayName , id: projData.id});
     setBC2Details({displayName: "Pick a Project First" ,type: "Then Pick a form Template" , formId: BC2Details.formId ,status: BC2Details.status , proJid: projData.id})
-    }
-  //setisBC2Updating(false); //displayName: "Pick a Project First", type: "Then Pick a form Template",
-  )
+    })
 }, [BC1Details]);
 //#endregion
+
 
 
 //Forms template chooser
@@ -140,7 +138,6 @@ const handleProjectInputChange = useCallback(value => {
     if (BC1Details.id !== ""){
     ProjectData.getFormTemplatesFromProject(BC1Details.id).then(res => {
       for (var x = 0; x < res.length; x++){
-          //console.log(res[x].formId, BC2Details.formId);
           menuItemsToReturn.push(
           <MenuItem
           key={res[x].formId}
@@ -197,7 +194,7 @@ useEffect(() =>  {
   if (sideBarChosen === 99) // Settings Page
   {
     const bodyData: JSX.Element[] = [];
-    bodyData.push(<h1>This page not currently in use</h1>);
+    bodyData.push(<h1 key="settingsPage">This page not currently in use</h1>);
     setbodyData(bodyData);
     sethomeFlag(false);
     setsettingsFlag(true);
