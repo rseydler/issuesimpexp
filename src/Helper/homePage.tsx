@@ -75,8 +75,7 @@ function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType }:hom
       <span>
         <div>
           {doing}
-          <p></p>
-          {logger}
+          {logger}          
         </div>
       </span>
     </div>

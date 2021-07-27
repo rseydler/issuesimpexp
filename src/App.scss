@@ -44,6 +44,10 @@
   pointer-events: none;
 }
 
+.errRow{
+  background-color: rgb(192, 134, 134); 
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 30s linear;

@@ -59,8 +59,7 @@ const App: React.FC = () => {
         setimsToken(token);
       })();
     }
-  }, [isAuthorized]
-  )
+  }, [isAuthorized])
 
   const onLoginClick = async () => {
     setIsLoggingIn(true);

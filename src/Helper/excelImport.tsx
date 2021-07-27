@@ -89,6 +89,7 @@ export class ExcelImporter{
                    // console.log("DataIs",data);
                 }
                 }
+                //logger(loggingData);
                 currColumn++;
             }
             if("id" in data){
@@ -131,7 +132,7 @@ export class ExcelImporter{
                             {   
                                 processThisRow = false;
                                 statusUpdates("FAILED User could not be determined for assignee email address. Row Skipped");
-                                loggingData.push(<div>Processing row {currRow} : FAILED User could not be determined for assignee email address. Row Skipped</div>);
+                                loggingData.push(<div class="errRow">Processing row {currRow} : FAILED User could not be determined for assignee email address. Row Skipped</div>);
                                 ws.getCell(currRow, logColumn).value = "FAILED User could not be determined for assignee email address. Row Skipped";
                             // console.log(`Failed to get userGUID for ${assigneeEmail} , userGuid returned ${usersGUID}`);
                             }
@@ -162,14 +163,19 @@ export class ExcelImporter{
                                 processThisRow = false;
                                 ws.getCell(currRow, logColumn).value = "FAILED Role could not be determined for assignee email address field. Row Skipped";
                                 statusUpdates("FAILED User could not be determined for assignee email address. Row Skipped");
-                                loggingData.push(<div>Processing row {currRow} : FAILED User could not be determined for assignee email address. Row Skipped</div>);
+                                loggingData.push(<div class="errRow">Processing row {currRow} : FAILED User could not be determined for assignee email address. Row Skipped</div>);
                             }
 
                         }
                     }
                     else{
+                        //assignee not found :(
                         //role check
                     }
+                }
+                else{
+                    statusUpdates(`No assignee data entered for row ${currRow}`);
+                    loggingData.push(<div>No assignee data entered for row {currRow}</div>);
                 }
             }
             } catch (error) {
@@ -204,9 +210,8 @@ export class ExcelImporter{
                                     if (assGuid === ""){
                                         processThisRow = false;
                                         statusUpdates(`FAILED User could not be determined for assignees email: ${assEmail}. Row Skipped`);
-                                        loggingData.push(<div>Processing row {currRow} : FAILED User could not be determined for assignees email: {assEmail}. Row Skipped</div>);
+                                        loggingData.push(<div class="errRow">Processing row {currRow} : FAILED User could not be determined for assignees email: {assEmail}. Row Skipped</div>);
                                         ws.getCell(currRow, logColumn).value = `FAILED User could not be determined for assignees email: ${assEmail}. Row Skipped`;
-                                        return;
                                     }
                                 }
                                 else{
@@ -215,11 +220,16 @@ export class ExcelImporter{
                                     assIsRole = true;
                                     if (assGuid === ""){
                                         statusUpdates(`FAILED ROLE could not be determined for assignees role name: ${assDisplayName}. Row Skipped`);
-                                        loggingData.push(<div>Processing row {currRow} : FAILED ROLE could not be determined for assignees role name: {assDisplayName}. Row Skipped</div>);
+                                        loggingData.push(<div class="errRow">Processing row {currRow} : FAILED ROLE could not be determined for assignees role name: {assDisplayName}. Row Skipped</div>);
                                         ws.getCell(currRow, logColumn).value = `FAILED ROLE could not be determined for assignees role name: ${assDisplayName}. Row Skipped`;
-                                        return;
+                                        processThisRow=false;
                                     }
                                 }
+                            }
+                            else{
+                                statusUpdates(`FAILED Invalid definition for assignees, Check your entry for row ${currRow}. Row Skipped`);
+                                loggingData.push(<div class="errRow">FAILED Invalid definition for assignees, Check your entry for row {currRow}. Row Skipped</div>);
+                                processThisRow = false;
                             }
                         }
                         else{
@@ -230,14 +240,19 @@ export class ExcelImporter{
                             assigneesData.push({displayName:assDisplayName, id:assGuid, isRole:assIsRole});
                         }
                     }
-                };
+                }
+                else{
+                    statusUpdates(`No assignees data entered for row ${currRow}`);
+                    loggingData.push(<div>No assignees data entered for row {currRow}</div>);
+                }
                 if("assignees" in data){
                     delete data.assignees;
+                    if (assigneesData.length > 0 ){
+                        ExcelImporter.updateObject(data,"value","assignees", assigneesData);
+                    }
+                    loggingData.push(<div>Processing row {currRow} : Assignees data assimilated</div>);
                 }
-                if (assigneesData.length > 0 ){
-                    ExcelImporter.updateObject(data,"value","assignees", assigneesData);
-                }
-                loggingData.push(<div>Processing row {currRow} : Assignees data assimilated</div>);
+               
             } catch (error) {
                 statusUpdates(`Processing row ${currRow} ooooops ${error}`);
                 loggingData.push(<div>Processing row {currRow} : Something weird happened</div>);
@@ -252,28 +267,31 @@ export class ExcelImporter{
             if(processThisRow){
                 statusUpdates(`Processing row ${currRow} uploading form now...`);
                 loggingData.push(<div>Processing row {currRow} : Uploading form</div>);
+                //statusUpdates(loggingData);
+                logger([...loggingData]);
                 await this.pushInTheChanges(JSON.stringify(data),existingFormId===null?"":existingFormId,selectedFormTemplate, loggingData);
             }
             else{
                 statusUpdates(`Processing row ${currRow} - row skipped due to errors`);
                 loggingData.push(<div>Processing row {currRow} : Row skipped due to errors</div>);
+                logger([...loggingData]);
             }
             currRow++;
             currColumn=1;
             }    
-    
+            logger([...loggingData]);
         }
         else
         {
             statusUpdates("IRS Sheet not found in the selected workbook.");
-            loggingData.push(<div>IRS Sheet not found in the selected workbook.</div>);
+            loggingData.push(<div class="errRow">IRS Sheet not found in the selected workbook.</div>);
             alert("There was no matiching IRS sheet in the workbook selected.")
            // console.log("no match for IRS");
         }
         
         statusUpdates("Upload completed");
         loggingData.push(<div>Upload complete</div>);
-        logger(loggingData);
+        logger([...loggingData]);
     }
 
     public static async pushInTheChanges(theIssue:string, existingId:string, selectedFormId:string, loggingData:any ){
@@ -304,7 +322,7 @@ export class ExcelImporter{
             else{
                 console.log("GOT an error",data);
                 console.log("GOT an error",json);
-                loggingData.push(<div>Issue creation failed: {data.status} </div>);
+                loggingData.push(<div class="errRow">Issue creation failed: {data.status} </div>);
             }
 
         }
@@ -329,7 +347,7 @@ export class ExcelImporter{
             else{
                 console.log("GOT an error",data);
                 console.log("GOT an error",json);
-                loggingData.push(<div>Issue update failed: {data.status}</div>);
+                loggingData.push(<div class="errRow">Issue update failed: {data.status}</div>);
             }
         }
     }
