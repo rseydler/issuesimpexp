@@ -13,7 +13,7 @@ export class IMSLoginProper{
     };
     await BrowserAuthorizationCallbackHandler.handleSigninCallback(oidcConfiguration.redirectUri);
     const browserClient = new BrowserAuthorizationClient(oidcConfiguration);
-    await browserClient.signInSilent(new ClientRequestContext);
+    await browserClient.signInSilent(new ClientRequestContext());
     const currentToken =  await browserClient.getAccessToken();
     return currentToken.toTokenString();
     // end of system login process
