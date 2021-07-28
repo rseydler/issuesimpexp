@@ -11,6 +11,7 @@ import { IMSLoginProper } from "./Helper/IMSLoginProper";
 import { ProjectData } from "./Helper/ProjectData";
 import {ThemeButton} from "./Helper/ThemeButton"
 import MyHomePage from "./Helper/homePage"
+import { Checkbox } from "@bentley/ui-core";
 
 const App: React.FC = () => {
   const [isAuthorized, setIsAuthorized] = useState(
@@ -26,6 +27,7 @@ const App: React.FC = () => {
   const [settingsFlag, setsettingsFlag] = useState(false);
   const [sideBarChosen, setsideBarChosen] = useState(0);
   const [bodyData, setbodyData] = useState<JSX.Element[]>([]);
+  const [verboseLogging, setVerboseLogging] = useState(false);
 //#region  LoginStuff
 
   useEffect(() => {
@@ -184,7 +186,7 @@ useEffect(() =>  {
   if (sideBarChosen === 0) // Home Page
   {
     const bodyData: JSX.Element[] = [];
-    bodyData.push(<MyHomePage key="HomePageStuff" selectedProjectId={BC1Details.id}  selectedFormsId={BC2Details.formId} selectedFormsType={BC2Details.type}/>);
+    bodyData.push(<MyHomePage key="HomePageStuff" selectedProjectId={BC1Details.id}  selectedFormsId={BC2Details.formId} selectedFormsType={BC2Details.type} verboseLogging={verboseLogging}/>);
     setbodyData(bodyData);
     sethomeFlag(true);
     setsettingsFlag(false);
@@ -193,12 +195,13 @@ useEffect(() =>  {
   if (sideBarChosen === 99) // Settings Page
   {
     const bodyData: JSX.Element[] = [];
-    bodyData.push(<h1 key="settingsPage">This page not currently in use</h1>);
+    bodyData.push(<h1 key="settingsPage">Optional Settings</h1>);
+    bodyData.push(<Checkbox label="Enable Logging to Console" defaultChecked={verboseLogging} key="verboseLogging" onChange={() => setVerboseLogging(!verboseLogging)} />);
     setbodyData(bodyData);
     sethomeFlag(false);
     setsettingsFlag(true);
   }
-},[sideBarChosen, BC1Details, BC2Details])
+},[sideBarChosen, BC1Details, BC2Details, verboseLogging])
 
   return (
     <div className="app">

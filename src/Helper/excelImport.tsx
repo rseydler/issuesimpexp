@@ -10,7 +10,7 @@ interface LooseObject {
 
 export class ExcelImporter{
 
-    public static async importIssuesFromExcel(selectedFile:FileReader, selectedProject:string, selectedFormTemplate:string, statusUpdates:any, logger:any = ""){
+    public static async importIssuesFromExcel(selectedFile:FileReader, selectedProject:string, selectedFormTemplate:string, statusUpdates:any, logger:any, verboseLogging:boolean){
         const loggingData:JSX.Element[] = [];
         const wb = new Excel.Workbook;
         const buffer = selectedFile.result;
@@ -21,7 +21,8 @@ export class ExcelImporter{
         statusUpdates("Looking for IRS worksheet");
         loggingData.push(<div>Looking for worksheet named IRS</div>);
         const ws = wb.getWorksheet("IRS");
-        
+        console.log(`Extra logging enabled: ${verboseLogging}`);
+
         if (ws.name==="IRS"){
             var currColumn =1;
             var currRow =2;
@@ -280,7 +281,7 @@ export class ExcelImporter{
                     //statusUpdates(loggingData);
                     logger([...loggingData]);
                     //console.log("Pushing this data",JSON.stringify(data));
-                    await this.pushInTheChanges(JSON.stringify(data),existingFormId===null?"":existingFormId,selectedFormTemplate, loggingData);
+                    await this.pushInTheChanges(JSON.stringify(data),existingFormId===null?"":existingFormId,selectedFormTemplate, loggingData, verboseLogging);
                 }
                 else{
                     statusUpdates(`Processing row ${currRow} - row skipped due to errors`);
@@ -305,9 +306,11 @@ export class ExcelImporter{
         logger([...loggingData]);
     }
 
-    public static async pushInTheChanges(theIssue:string, existingId:string, selectedFormId:string, loggingData:any ){
+    public static async pushInTheChanges(theIssue:string, existingId:string, selectedFormId:string, loggingData:any, verboseLogging:boolean ){
         const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
-        //console.log("pushing this to the service", theIssue);
+        if(verboseLogging){
+            console.log("Preparing to upload this", theIssue);
+        }
        // return;
         if (existingId===""){
             

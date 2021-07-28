@@ -9,13 +9,13 @@ interface homePageStuff{
   selectedProjectId:string;
   selectedFormsId:string;
   selectedFormsType:string;
+  verboseLogging:boolean;
 }
 
 var projId = "";
 var formId = "";
-var commentsChecked = false;
 
-function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType }:homePageStuff) {
+function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType, verboseLogging }:homePageStuff) {
   const [checked, setChecked] = React.useState(true);
   const [doing, setDoing] = useState("");
   const [logger, setLogger] = useState<JSX.Element[]>([]);
@@ -48,7 +48,7 @@ function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType }:hom
         const fileReader = new FileReader();
         fileReader.readAsArrayBuffer(fileName);
         fileReader.onload = async() =>{
-          await ExcelImporter.importIssuesFromExcel(fileReader, projId, formId,setDoing, setLogger);
+          await ExcelImporter.importIssuesFromExcel(fileReader, projId, formId,setDoing, setLogger, verboseLogging);
         }
       } catch (error) {
         setDoing(`There was an error reading the file: ${error}`);
@@ -68,6 +68,9 @@ function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType }:hom
     info.push(<p key="p"></p>);
     info.push(<Button size="small" key="Clean Logger" name="Clean Logger" onClick={() => setLogger([<div></div>])}>Clear Log Display</Button>);
     info.push(<input hidden={true} key="hidden button" type="file" id="input" onClick={() => {resetFileSelected()}} onChange={() => {startExelImport()}}/>)
+    if(verboseLogging){
+      info.push(<div>Extra logging enabled</div>);
+    }
    
   return (
     <div>
