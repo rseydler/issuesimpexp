@@ -3,6 +3,7 @@
 import * as Excel from 'exceljs';
 import { IMSLoginProper } from './IMSLoginProper';
 import React, { useCallback } from 'react'
+import { ResponseError } from '@bentley/itwin-client';
 
 interface LooseObject {
     [key: string]: any
@@ -86,7 +87,7 @@ export class ExcelImporter{
                     //logger(loggingData);
                     currColumn++;
                 }
-                if("id" in data){
+                if ("id" in data){
                     delete data.id;
                 }
                 if ("number" in data){
@@ -108,39 +109,32 @@ export class ExcelImporter{
                 if ("state" in data){
                     delete data.state;
                 }
-                //console.log("ALL DATA", data);
+
+                if(verboseLogging){console.log("Assignee email type:",typeof data.assignee.email)};
+                if(typeof data.assignee.email == "undefined"){
+                    if(verboseLogging){console.log("Cleaning out assignee completely")};
+                    delete data.assignee
+                }
                 if("assignee" in data){
-                    //console.log("found assignee", data.assignee);
                     if ("email" in data.assignee){
-                        // console.log("found email", data.assignee.email);
-                        //console.log("typeof is:",typeof(data.assignee.email))
                         if(typeof(data.assignee.email) === "object" && "hyperlink" in data.assignee.email){
-                            // console.log("data has hyperlink!", data.assignee.email);
                             //bloody hyperlinks!
                             const tmpEmail = data.assignee.email.text;
                             delete data.assignee.email;
-                            //console.log("deleted email", data);
                             ExcelImporter.updateObject(data.assignee,"value","email", tmpEmail);
-                            // console.log("data now looks like", data);
                         }
-                        //console.log("Updated data looks like", data);
                         const assigneeEmail:string = data.assignee.email;
                         statusUpdates(`Processing row ${currRow} sorting out assignee details`);
                         loggingData.push(<div>Processing row {currRow} : sorting out assignee details</div>);
-                        //delete data.assignee;
                         if (!(assigneeEmail.trim() === "")){
-                        // console.log("assignee email is not blank");
                             if (assigneeEmail.includes("@")){
-                            //console.log("assignee email includes a @", assigneeEmail);
                                 const usersGUID = await this.getUsersGUIDfromEmail(assigneeEmail, selectedProject);
-                                //console.log("got user GUID : ",usersGUID);
                                 if (usersGUID === "")
                                 {   
                                     processThisRow = false;
                                     statusUpdates("FAILED User could not be determined for assignee email address. Row Skipped");
                                     loggingData.push(<div className="errRow">Processing row {currRow} : FAILED User could not be determined for assignee email address. Row Skipped</div>);
                                     ws.getCell(currRow, logColumn).value = "FAILED User could not be determined for assignee email address. Row Skipped";
-                                // console.log(`Failed to get userGUID for ${assigneeEmail} , userGuid returned ${usersGUID}`);
                                 }
                                 else
                                 {
@@ -152,8 +146,6 @@ export class ExcelImporter{
                                     ExcelImporter.updateObject(data.assignee,"value","displayName", usersDisplayName);
                                     loggingData.push(<div>Processing row {currRow} : Assignee data assimilated</div>);
                                 }
-                                //TODO
-                                //get the user GUID from the email address.
                             }
                             else{ //it is a role
                                 const roleGUID = await this.getRoldIdFromDisplayName(assigneeEmail,selectedProject);
@@ -174,36 +166,41 @@ export class ExcelImporter{
 
                             }
                         }
+                        else{
+                            //clean up data incase user left in some entries!
+                            delete data.assignee;
+                            if(data.id === "" || data.id === undefined || data.id === null){
+                                statusUpdates(`No assignee data entered for row ${currRow} You will be the assignee.`);
+                                loggingData.push(<div>No assignee data entered for row {currRow} You will be the assignee</div>);
+                            }
+                        }
+                    }
                     else{
-                        //clean up data incase user left in some entries!
-                        delete data.assignee;
-                        console.log("delete assignee ", data);
                         if(data.id === "" || data.id === undefined || data.id === null){
                             statusUpdates(`No assignee data entered for row ${currRow} You will be the assignee.`);
                             loggingData.push(<div>No assignee data entered for row {currRow} You will be the assignee</div>);
                         }
-                        //assignee not found :(
-                        //role check
                     }
                 }
-                else{
-                    if(data.id === "" || data.id === undefined || data.id === null){
-                        statusUpdates(`No assignee data entered for row ${currRow} You will be the assignee.`);
-                        loggingData.push(<div>No assignee data entered for row {currRow} You will be the assignee</div>);
-                    }
-                }
-            }
                 //work on the assignees
                 // SEYDLER|0|91d7cf3f-8ba1-406b-b0de-9a49c1a86d05||Ron Seydler|Ron.Seydler@bentley.com|fe0bd0e6-d9dc-4dec-b013-0bcfbc05a66c
                 //first split them up by ||
+                if(typeof(data.assignees) === "string"){
+                    if(data.assignees.trim() === ""){
+                        delete data.assignees
+                    }
+                }
+                if (typeof(data.assignees) === "object"){
+                    const tmpAssigneesHolder = data.assignees.text;
+                    delete data.assignees;
+                    this.updateObject(data, "value", "assignees", tmpAssigneesHolder);
+                }
                 try {
                     statusUpdates(`Processing row ${currRow} sorting out assignees details`);
                     loggingData.push(<div>Processing row {currRow} : Sorting out assignees data</div>);
                     if ("assignees" in data){
                         const assignees:string = data.assignees;
                         const assignee = assignees.split("||");
-                    //   console.log("assignee looks like", assignee);
-                        //var info: { id: string; displayName: string; projectNumber: string; }[] = [];
                         var assigneesData:{displayName:string;id:string;isRole:false;}[] = [];
                         for (var i=0;i<assignee.length;i++){
                             if (!(assignee[i] === "")){
@@ -325,11 +322,9 @@ export class ExcelImporter{
                 body: theIssue,
             })
             const data = await response;
-            const json = data.json;
+            const json = await data.json;
             if (data.status === 201)
             {
-                //console.log("got a 201");
-                //alert("created issue successfully");
                 loggingData.push(<div>Issue created successfully</div>);
                 return "1";
             }
@@ -338,10 +333,8 @@ export class ExcelImporter{
                 console.log("GOT an error",json);
                 loggingData.push(<div className="errRow">Issue creation failed: {data.status} </div>);
             }
-
         }
         else{
-            //console.log("pushing to ", existingId);
             const response = await fetch(`https://api.bentley.com/issues/${existingId}`, {
                 method: 'PATCH',
                 mode: 'cors',
@@ -352,7 +345,7 @@ export class ExcelImporter{
                   body: theIssue,
             })
             const data = await response;
-            const json = data.json;
+            const json = await data.json;
             if (data.status === 200 || data.status === 201)
             {
                 loggingData.push(<div>Issue updated successfully</div>);
