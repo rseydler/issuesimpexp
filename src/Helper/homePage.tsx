@@ -61,7 +61,7 @@ function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType, verb
 
     //right we have enough lets make some buttons!
     info.push(<h2 key="h2">Please select from the following options</h2>)
-    info.push(<Button size="large" key="Export Button" name="Export Button" onClick={() => ExcelExporter.exportIssuesToExcel(selectedFormsId, selectedProjectId,selectedFormsType, checked, setDoing, setLogger)}>Export Issues</Button>);
+    info.push(<Button size="large" key="Export Button" name="Export Button" onClick={() => ExcelExporter.exportIssuesToExcel(selectedFormsId, selectedProjectId,selectedFormsType, checked, setDoing, setLogger, verboseLogging)}>Export Issues</Button>);
     info.push(<Checkbox label="Export Comments" defaultChecked={checked} key="export comments" onChange={() => setChecked(!checked)} />)
     info.push(<br key="br"></br>);
     info.push(<Button size="large" input="file" key="Upload Excel" name="Upload Excel" onClick={() => clickFileButton()}>Upload Excel</Button>);

@@ -3,6 +3,7 @@ import * as Excel from 'exceljs';
 //import { url } from 'inspector';
 import { IMSLoginProper } from './IMSLoginProper';
 import React from 'react';
+import { RecurseToCurvesGeometryHandler } from '@bentley/geometry-core';
 
 export class ExcelExporter{
 
@@ -13,10 +14,11 @@ export class ExcelExporter{
         return;
     }
 
-    public static async exportIssuesToExcel(formTemplateId:string, projectId:string, formType:string, exportComments:boolean, statusUpdates:any, logger:any){
+    public static async exportIssuesToExcel(formTemplateId:string, projectId:string, formType:string, exportComments:boolean, statusUpdates:any, logger:any, verboseLogging:boolean){
         // get all the issues related to the formType
         // this is quicker than looping through every issue on the project
         // as you cannot filter directly on the "template" id used :(
+        console.log(`Extra logging enabled: ${verboseLogging}`);
         const formTypeFormsMatch:any[] = [];
         const loggingData:JSX.Element[] = [];
         var formTypeLooper = true; //used to force the initial call;
@@ -24,10 +26,13 @@ export class ExcelExporter{
         loggingData.push(<div><h1>Logger results</h1></div>);
         loggingData.push(<div>Grabbing up to date token</div>);
         const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+        const accessTokenTime = Date.now();
+        if(verboseLogging){console.log(`Got accesstoken ${accessToken}`)};
         var urlToQuery : string = `https://api.bentley.com/issues/?top=50&projectId=${projectId}&type=${formType}`;
         while (formTypeLooper) {
             statusUpdates("Looking through issues...");
             loggingData.push(<div>Looking through issues...</div>);
+            if(verboseLogging){console.log(`Looking at ${urlToQuery}`)};
             const response = await fetch(urlToQuery, {
                 mode: 'cors',
                 headers: {
@@ -37,10 +42,12 @@ export class ExcelExporter{
             })
             const data = await response;
             const json = await data.json();
+            if(verboseLogging){console.log("Got data ",json)};
+
             if (data.status === 500){
                 //api failure somewhere!
                 statusUpdates(`Bentley had a server failure. Try again later.`);
-                loggingData.push(<div>Bentley had a server failure. Try again later.</div>);
+                loggingData.push(<div className="errRow">Bentley had a server failure. Try again later.</div>);
                 logger(loggingData);
                 return;
             }
@@ -51,6 +58,7 @@ export class ExcelExporter{
             try {
                 formTypeLooper = true;
                 urlToQuery = json._links.next.href;
+                if(verboseLogging){console.log(`Continuation found new query is ${urlToQuery}`)};
             } catch (error) {
                 // better than === undefined?
                 //swallow the missing link error and stop the loop
@@ -61,7 +69,8 @@ export class ExcelExporter{
         if (!(formTypeFormsMatch.length > 0))
         {
             statusUpdates("No exportable form instances found");
-            loggingData.push(<div>No exportable form instances found</div>);
+            loggingData.push(<div className="errRow">No exportable form instances found</div>);
+            if(verboseLogging){console.error(`No form instances were found`)};
             alert("No exportable form instances found");
             return;
         }
@@ -113,11 +122,13 @@ export class ExcelExporter{
         var userPropsStartAtCol = currCol;
         var currRow = 1;
         var gotData = false;
+        if(verboseLogging){console.log(`Created all of the default excel columns`)};
 
         // loop through all the potential matches and extract the properties column headers from the data
         // this is the only way you can actually figure out what controls are on the form
         // and the access keys to formulate for an upload.... very costly! :(
         for(const typeMatchId of formTypeFormsMatch) {
+            if(verboseLogging){console.log("Examining form instance for match ", typeMatchId)};
             statusUpdates(`Checking form ${typeMatchId.id}`);
             loggingData.push(<div>Checking form {typeMatchId.id}</div>);
             const response = await fetch(`https://api.bentley.com/issues/${typeMatchId.id}`, {
@@ -132,12 +143,14 @@ export class ExcelExporter{
             if (data.status === 500){
                 //api failure somewhere!
                 statusUpdates(`Bentley had a server failure. Try again later.`);
-                loggingData.push(<div>Bentley had a server failure. Try again later.</div>);
+                loggingData.push(<div className="errRow">Bentley had a server failure. Try again later.</div>);
                 logger(loggingData);
                 return;
             }
             if (formTemplateId === json.issue.formId)
             {
+                if(verboseLogging){console.log(`This instance is from the selected definition`)};
+
                 currRow++;
                 statusUpdates(`Exporting form to excel row: ${currRow}`);
                 loggingData.push(<div>Exporting form to excel row: {currRow}</div>);
@@ -322,7 +335,9 @@ export class ExcelExporter{
                     if ("id" in json.issue.assignee){
                         statusUpdates(`Exporting form to excel row: ${currRow} Supplementing assignee data`);
                         loggingData.push(<div>Exporting form to excel row: {currRow} Supplementing assignee data</div>);
-                        const usersEmail = await ExcelExporter.getUsersEmailFromGuid(json.issue.assignee.id, projectId);
+                        const usersEmail = await ExcelExporter.getUsersEmailFromGuid(json.issue.assignee.id, projectId,  accessToken);
+                        if(verboseLogging){console.log(`Got this email for the user ${usersEmail}`)};
+
                         if (usersEmail === "0")
                         {
                             // it is a role
@@ -365,20 +380,26 @@ export class ExcelExporter{
                 if ("assignees" in json.issue){
                     statusUpdates(`Exporting form to excel row: ${currRow} Supplementing assignees data`);
                     loggingData.push(<div>Exporting form to excel row: {currRow} Supplementing assignees data</div>);
-                    //console.log("assigneesssss", json.issue.assignees);
+                    if(verboseLogging){console.log("Looking at these assignees ", json.issue.assignees)};
                     // assignees is an array (well should be!)
                     var strAssignees = "";
                     for (var i = 0; i < json.issue.assignees.length; i++)
                     {
                         if (strAssignees===""){
-                            strAssignees = json.issue.assignees[i].displayName + "|" + await ExcelExporter.getUsersEmailFromGuid(json.issue.assignees[i].id, projectId) + "|" + json.issue.assignees[i].id
+                            strAssignees = json.issue.assignees[i].displayName + "|" + await ExcelExporter.getUsersEmailFromGuid(json.issue.assignees[i].id, projectId,  accessToken) + "|" + json.issue.assignees[i].id
                         }
                         else
                         {
-                            strAssignees =  strAssignees + "||" + json.issue.assignees[i].displayName + "|" + await ExcelExporter.getUsersEmailFromGuid(json.issue.assignees[i].id, projectId) + "|" + json.issue.assignees[i].id
+                            strAssignees =  strAssignees + "||" + json.issue.assignees[i].displayName + "|" + await ExcelExporter.getUsersEmailFromGuid(json.issue.assignees[i].id, projectId,  accessToken) + "|" + json.issue.assignees[i].id
                         }
                     }
 
+                    //added error handler for odd occurance where issue res has stored a null value for assignees!
+                    if(strAssignees.includes("Check your issue!")){
+                        if(verboseLogging){console.warn(`Handled an invalid assignee`)};
+                        statusUpdates(`Exporting form to excel row: ${currRow} Invalid data found for assignees.`);
+                        loggingData.push(<div className="errRow">Exporting form to excel row: {currRow} Invalid data found for assignees.</div>);
+                    }
                     ws.getCell(currRow, 26).value = strAssignees;
                     if (ws.getCell(1, 26).note === undefined)
                     {
@@ -437,9 +458,10 @@ export class ExcelExporter{
         // double check we go some data
         if (gotData === false){
             statusUpdates("No exportable form instances were found");
-            loggingData.push(<div>No exportable form instances were found</div>);
+            loggingData.push(<div className="errRow">No exportable form instances were found</div>);
             alert("No exportable form instances were found");
             logger(loggingData);
+            if(verboseLogging){console.error(`No form instances were found`)};
             return;
         }
 
@@ -467,7 +489,7 @@ export class ExcelExporter{
                 if (data.status === 500){
                     //api failure somewhere!
                     statusUpdates(`Bentley had a server failure. Try again later.`);
-                    loggingData.push(<div>Bentley had a server failure. Try again later.</div>);
+                    loggingData.push(<div className="errRow">Bentley had a server failure. Try again later.</div>);
                     logger(loggingData);
                     return;
                 }
@@ -493,8 +515,12 @@ export class ExcelExporter{
         return;
     }
 
-    public static async getUsersEmailFromGuid(userGuid:string, projectId:string){
-        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+    public static async getUsersEmailFromGuid(userGuid:string, projectId:string, accessToken:any){
+        if(userGuid === null){
+            console.log("Something odd has happened");
+            return "Check your issue!";
+        }
+        //const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
         const response = await fetch(`https://api.bentley.com/projects/${projectId}/members/${userGuid}`, {
                 mode: 'cors',
                 headers: {

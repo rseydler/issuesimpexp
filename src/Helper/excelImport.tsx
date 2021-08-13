@@ -12,6 +12,7 @@ interface LooseObject {
 export class ExcelImporter{
 
     public static async importIssuesFromExcel(selectedFile:FileReader, selectedProject:string, selectedFormTemplate:string, statusUpdates:any, logger:any, verboseLogging:boolean){
+        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
         const loggingData:JSX.Element[] = [];
         const wb = new Excel.Workbook;
         const buffer = selectedFile.result;
@@ -128,7 +129,7 @@ export class ExcelImporter{
                         loggingData.push(<div>Processing row {currRow} : sorting out assignee details</div>);
                         if (!(assigneeEmail.trim() === "")){
                             if (assigneeEmail.includes("@")){
-                                const usersGUID = await this.getUsersGUIDfromEmail(assigneeEmail, selectedProject);
+                                const usersGUID = await this.getUsersGUIDfromEmail(assigneeEmail, selectedProject, accessToken);
                                 if (usersGUID === "")
                                 {   
                                     processThisRow = false;
@@ -142,13 +143,13 @@ export class ExcelImporter{
                                     delete data.assignee;
                                     ExcelImporter.updateObject(data,"object","assignee", "");
                                     ExcelImporter.updateObject(data.assignee,"value","id", usersGUID);
-                                    const usersDisplayName= await this.getUsersDisplayNameFromGUID(usersGUID,selectedProject);
+                                    const usersDisplayName= await this.getUsersDisplayNameFromGUID(usersGUID,selectedProject, accessToken);
                                     ExcelImporter.updateObject(data.assignee,"value","displayName", usersDisplayName);
                                     loggingData.push(<div>Processing row {currRow} : Assignee data assimilated</div>);
                                 }
                             }
                             else{ //it is a role
-                                const roleGUID = await this.getRoldIdFromDisplayName(assigneeEmail,selectedProject);
+                                const roleGUID = await this.getRoldIdFromDisplayName(assigneeEmail,selectedProject, accessToken);
                                 if (!(roleGUID === "")){
                                     delete data.assignee;
                                     ExcelImporter.updateObject(data,"object","assignee", "");
@@ -214,7 +215,7 @@ export class ExcelImporter{
                                     assEmail = elementData[1];
                                     //get the real guid
                                     if (assEmail.includes("@")){
-                                        assGuid = await this.getUsersGUIDfromEmail(assEmail, selectedProject);
+                                        assGuid = await this.getUsersGUIDfromEmail(assEmail, selectedProject, accessToken);
                                         if (assGuid === ""){
                                             processThisRow = false;
                                             statusUpdates(`FAILED User could not be determined for assignees email: ${assEmail}. Row Skipped`);
@@ -224,7 +225,7 @@ export class ExcelImporter{
                                     }
                                     else{
                                         //assume role
-                                        assGuid = await this.getRoldIdFromDisplayName(assDisplayName,selectedProject);
+                                        assGuid = await this.getRoldIdFromDisplayName(assDisplayName,selectedProject, accessToken);
                                         assIsRole = true;
                                         if (assGuid === ""){
                                             statusUpdates(`FAILED ROLE could not be determined for assignees role name: ${assDisplayName}. Row Skipped`);
@@ -278,7 +279,7 @@ export class ExcelImporter{
                     //statusUpdates(loggingData);
                     logger([...loggingData]);
                     //console.log("Pushing this data",JSON.stringify(data));
-                    await this.pushInTheChanges(JSON.stringify(data),existingFormId===null?"":existingFormId,selectedFormTemplate, loggingData, verboseLogging);
+                    await this.pushInTheChanges(JSON.stringify(data),existingFormId===null?"":existingFormId,selectedFormTemplate, loggingData, verboseLogging, accessToken);
                 }
                 else{
                     statusUpdates(`Processing row ${currRow} - row skipped due to errors`);
@@ -303,8 +304,8 @@ export class ExcelImporter{
         logger([...loggingData]);
     }
 
-    public static async pushInTheChanges(theIssue:string, existingId:string, selectedFormId:string, loggingData:any, verboseLogging:boolean ){
-        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+    public static async pushInTheChanges(theIssue:string, existingId:string, selectedFormId:string, loggingData:any, verboseLogging:boolean, accessToken:any ){
+        //const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
         if(verboseLogging){
             console.log("Preparing to upload this", theIssue);
         }
@@ -383,9 +384,9 @@ export class ExcelImporter{
         return;
     }
 
-    public static async getUsersDisplayNameFromGUID(userGuid:string, projectId:string ){
+    public static async getUsersDisplayNameFromGUID(userGuid:string, projectId:string, accessToken:any ){
        // console.log("starting getUsersDisplayNameFromGUID", userGuid, projectId);
-        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+       // const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
        // console.log("got token", `https://api.bentley.com/projects/${projectId}/members/${userGuid}`);
         const response = await fetch(`https://api.bentley.com/projects/${projectId}/members/${userGuid}`, {
                 mode: 'cors',
@@ -412,8 +413,8 @@ export class ExcelImporter{
         }
     }
 
-    public static async getUsersGUIDfromEmail(userEmail:string, projectId:string ){
-        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+    public static async getUsersGUIDfromEmail(userEmail:string, projectId:string , accessToken:any){
+        //const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
         var looper = true; //used to force the initial call;
         var memberGUID = "";
         var urlToQuery : string = `https://api.bentley.com/projects/${projectId}/members`;
@@ -451,14 +452,14 @@ export class ExcelImporter{
         }
         // after all that let's check if it was a role or missing
         if (memberGUID === ""){
-            memberGUID = await this.getRoldIdFromDisplayName(userEmail, projectId);
+            memberGUID = await this.getRoldIdFromDisplayName(userEmail, projectId, accessToken);
         }
       //  console.log(memberGUID);
         return memberGUID;
     }
 
-    public static async getRoldIdFromDisplayName(userEmail:string, projectId:string){
-        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+    public static async getRoldIdFromDisplayName(userEmail:string, projectId:string, accessToken:any){
+       // const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
         var memberGUID = "";
         var looper=true;
         var urlToQuery : string = `https://api.bentley.com/projects/${projectId}/roles`;
