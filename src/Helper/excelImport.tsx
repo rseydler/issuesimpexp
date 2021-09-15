@@ -13,10 +13,15 @@ export class ExcelImporter{
 
     public static async importIssuesFromExcel(selectedFile:FileReader, selectedProject:string, selectedFormTemplate:string, statusUpdates:any, logger:any, verboseLogging:boolean){
         const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+        const timeStarted = new Date();
+        const timeStartedHolder = timeStarted.toLocaleTimeString([],{hour: '2-digit', minute: '2-digit', second: '2-digit'});
+        var errorCount = 0;
+        var processCount = 0;
         const loggingData:JSX.Element[] = [];
         const wb = new Excel.Workbook;
-        const buffer = selectedFile.result;
+        const buffer = selectedFile.result;        
         statusUpdates("Loading file");
+        loggingData.push(<div>Started Processing at {timeStartedHolder}</div>);
         loggingData.push(<div><h1>Logger results</h1></div>);
         loggingData.push(<div>Loading file</div>);
         await wb.xlsx.load(buffer);
@@ -279,10 +284,11 @@ export class ExcelImporter{
                     //statusUpdates(loggingData);
                     logger([...loggingData]);
                     //console.log("Pushing this data",JSON.stringify(data));
-                    await this.pushInTheChanges(JSON.stringify(data),existingFormId===null?"":existingFormId,selectedFormTemplate, loggingData, verboseLogging, accessToken);
+                    await this.pushInTheChanges(JSON.stringify(data),existingFormId===null?"":existingFormId,selectedFormTemplate, loggingData, verboseLogging, accessToken, errorCount, processCount);
                 }
                 else{
                     statusUpdates(`Processing row ${currRow} - row skipped due to errors`);
+                    errorCount++;
                     loggingData.push(<div>Processing row {currRow} : Row skipped due to errors</div>);
                     logger([...loggingData]);
                 }
@@ -301,10 +307,17 @@ export class ExcelImporter{
         
         statusUpdates("Upload completed");
         loggingData.push(<div>Upload complete</div>);
+        loggingData.push(<div><h2>Summary Data</h2></div>);
+        loggingData.push(<div>Total issues created: {currRow-2}</div>);
+        loggingData.push(<div>Total issues with errors: {errorCount}</div>);
+        loggingData.push(<div>Time started: {timeStartedHolder}</div>);
+        const finishedTime = new Date();
+        const finishTimeHolder = finishedTime.toLocaleTimeString([],{hour: '2-digit', minute: '2-digit', second: '2-digit'});
+        loggingData.push(<div>Time ended: {finishTimeHolder}</div>);
         logger([...loggingData]);
     }
 
-    public static async pushInTheChanges(theIssue:string, existingId:string, selectedFormId:string, loggingData:any, verboseLogging:boolean, accessToken:any ){
+    public static async pushInTheChanges(theIssue:string, existingId:string, selectedFormId:string, loggingData:any, verboseLogging:boolean, accessToken:any, errorCount:any, processCount:any ){
         //const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
         if(verboseLogging){
             console.log("Preparing to upload this", theIssue);
@@ -327,12 +340,14 @@ export class ExcelImporter{
             if (data.status === 201)
             {
                 loggingData.push(<div>Issue created successfully</div>);
+                processCount++;
                 return "1";
             }
             else{
                 console.log("GOT an error",data);
                 console.log("GOT an error",json);
                 loggingData.push(<div className="errRow">Issue creation failed: {data.status} </div>);
+                errorCount++;
             }
         }
         else{
@@ -350,11 +365,13 @@ export class ExcelImporter{
             if (data.status === 200 || data.status === 201)
             {
                 loggingData.push(<div>Issue updated successfully</div>);
+                processCount++;
                 return "1";
             }
             else{
                 console.log("GOT an error",data);
                 console.log("GOT an error",json);
+                errorCount++;
                 loggingData.push(<div className="errRow">Issue update failed: {data.status}</div>);
             }
         }
