@@ -41,23 +41,33 @@ export class ProjectData{
       }
 
       public static async getFormTemplatesFromProject(projectId: string){
-          const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
-          const response = await fetch("https://api.bentley.com/issues/formDefinitions?projectId=" + projectId, { 
-          mode: 'cors',
-          headers: {
-              'Content-Type': 'application/json',
-              'Authorization': accessToken,
-              //'Access-Control-Allow-Origin' : 'http://localhost:3000',
-            },
-          })
-      const data = await response; 
-      const json = await data.json();
-      var info: { id: string; formId: string; displayName: string; type: string; }[] = [];
-      for (var i = 0; i < json.formDefinitions.length; i++)
-      {
-        info.push({id:projectId, formId:json.formDefinitions[i].id ,displayName:json.formDefinitions[i].displayName, type:json.formDefinitions[i].type})
-      }
-      return info;
+        if(projectId.trim() === ""){
+          console.log("Invalid projectId passed");
+          return ([{id:"", formId:"" ,displayName:"", type:""}]);
+        }
+        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+        const response = await fetch("https://api.bentley.com/issues/formDefinitions?projectId=" + projectId, { 
+        mode: 'cors',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': accessToken,
+            //'Access-Control-Allow-Origin' : 'http://localhost:3000',
+          },
+        })
+        const data = await response;
+        if (data.ok){ 
+          const json = await data.json();
+          var info: { id: string; formId: string; displayName: string; type: string; }[] = [];
+          for (var i = 0; i < json.formDefinitions.length; i++)
+          {
+            info.push({id:projectId, formId:json.formDefinitions[i].id ,displayName:json.formDefinitions[i].displayName, type:json.formDefinitions[i].type})
+          }
+          return info;
+        }
+        else
+        {
+          return ([{id:"", formId:"" ,displayName:"An error occured hit refresh", type:""}]);
+        }
       }
 
       public static async getFormDetailsFromId(formId: string){

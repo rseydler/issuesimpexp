@@ -77,116 +77,160 @@ const App: React.FC = () => {
   
 //#region BreadCrumb1 Projects Drop Down
 //get the recent projects and stuff them into the 1st breadcrumb element
+const [projectDetails, setprojectDetails] = useState([{name: "Pick a Project", description: "...to Start", id: ""}]);
+const [projectLabel, setprojectLabel] = useState({displayName:"Loading....", description: "....", id:""});
+var selectedProjectId:string = "";
 
+ //get the list of recent projects once when authorized
+ useEffect(() =>{
+  if (!isAuthorized){
+    setprojectLabel({displayName:"Waiting on login",description:"", id:""});
+    return;
+  }
+  setprojectLabel({displayName:"Loading...",description:"", id:""});
+  // clear any other dependant drop downs also.
+  (async () => {
+    setprojectDetails([]);
+    const recentProjects = [{name: "", description: "", id: ""}];
+    recentProjects.shift();
+    //get the iModel List and stuff it
+    if(selectedProjectId === "" || selectedProjectId === undefined){
+      const response = await ProjectData.getRecentProjects();
+      const data = await response;
+      if(data.length === 0){
+        recentProjects.push({name:"No recent projects found",description:"", id:""});
+      }
+      else{
+        for (var x = 0; x < data.length; x++){
+          //loop through the projects result
+          recentProjects.push({name:data[x].projectNumber, description:data[x].displayName, id:data[x].id});
+        }
+        setprojectDetails(recentProjects);
+      }
+    }
+    setprojectLabel({displayName:"Select a project from the list",description:"", id:""});
+  })();
+},[isAuthorized])
+
+
+// formulate the menu entries - update when something is picked or the contextid changes in the url
 const recentProject = useCallback((close: () => void) => {
   var menuItemsToReturn : JSX.Element[] = [];
-  if (isAuthorized){
-  ProjectData.getRecentProjects().then(res => {
-    for (var x = 0; x < res.length; x++){
-        menuItemsToReturn.push(
-        <MenuItem
-        key={res[x].id}
-        title={res[x].projectNumber}
-        value={res[x].id} 
-        id={res[x].id}
-        onClick={(value) => {         
-            handleProjectInputChange(value);
-            close(); // close the dropdown menu
-        }}
-        isSelected={(res[x].id === BC1Details.id) ? true : false}
-        >
-        {res[x].projectNumber} -- {res[x].displayName}
-        </MenuItem>
-        )
+  for (var x = 0; x < projectDetails.length; x++){
+      menuItemsToReturn.push(
+      <MenuItem
+      key={projectDetails[x].id}
+      title={projectDetails[x].name}
+      value={projectDetails[x].id}
+      id={projectDetails[x].id}
+      onClick={(value: any) => {         
+        handleProjectChange(value);
+          close(); // close the dropdown menu
+      }}
+      isSelected={(projectDetails[x].name === projectLabel.displayName) ? true : false}
+      >
+      {projectDetails[x].name}
+      </MenuItem>
+      )
+  }
+
+  return(menuItemsToReturn);
+},[projectLabel]) 
+
+const handleProjectChange = useCallback(value =>{
+  //got the ID(GUID) so find the displayName
+  projectDetails.forEach(project =>{
+    if(project.id === value)
+    {
+      setprojectLabel({displayName:project.name, description:project.description, id:project.id});
+     // setContextId(project.id);
     }
   })
-  .catch(error => {console.log("Caught this nasty", error.message); 
-      menuItemsToReturn.push(
-          <MenuItem
-          key="1" title={error.essage}
-          onClick={(value) => {close()}}
-          >Ooops - {error.message}</MenuItem>)
-          })
-  return (menuItemsToReturn);
-  }
-  else
-  {
-    return ([<MenuItem key="1">Please Login</MenuItem>])
-  }
-},[isAuthorized, BC1Details])
-
-//handle the change to breadcrumb1
- const handleProjectInputChange = useCallback(value => {
-  setBC2Details({displayName: "Loading...." ,type: "Won't be a moment" , formId:"" ,status: "", proJid: ""});
-  ProjectData.getProjectData(value).then(projData => {
-    setBC1Details({name: projData.projectNumber ,description: projData.displayName , id: projData.id});
-    setBC2Details({displayName: "Pick a Project First" ,type: "Then Pick a form Template" , formId: BC2Details.formId ,status: BC2Details.status , proJid: projData.id})
-    })
-}, [BC1Details]);
-//#endregion
-
-
+},[projectDetails])
 
 //Forms template chooser
+const [formDetails, setformDetails] = useState([{name: "Pick a Form", description: "...to Start", id: "", type:""}]);
+const [formLabel, setformLabel] = useState({displayName:"Loading....", description: "....", id:"", type:""});
 
-  const issueTemplates = useCallback((close: () => void) => {
-    var menuItemsToReturn : JSX.Element[] = [];
-    if (!isAuthorized)
-    {
-      return ([<MenuItem key="1">Please Login</MenuItem>])
-    }
-  
-    if (BC1Details.id !== ""){
-    ProjectData.getFormTemplatesFromProject(BC1Details.id).then(res => {
-      for (var x = 0; x < res.length; x++){
-          menuItemsToReturn.push(
-          <MenuItem
-          key={res[x].formId}
-          title={res[x].displayName}
-          value={res[x].formId} 
-          id={res[x].formId}
-          onClick={(value) => {         
-              handleFormSelectionChange(value);
-              close(); // close the dropdown menu
-          }}
-          isSelected={(res[x].formId == BC2Details.formId) ? true : false}
-          >
-          {res[x].displayName} -- {res[x].type}
-          </MenuItem>
-          )
+ //get the list of recent projects once when authorized
+ useEffect(() =>{
+  if (!isAuthorized){
+    setformLabel({displayName:"Waiting on login",description:"", id:"", type:""});
+    return;
+  }
+  setformLabel({displayName:"Loading...",description:"", id:"", type:""});
+  // clear any other dependant drop downs also.
+  (async () => {
+    setformDetails([]);
+    const formDefs = [{name: "", description: "", id: "", type: ""}];
+    formDefs.shift();
+    //get the iModel List and stuff it
+    if(projectLabel.id.trim() !== ""){
+      const response = await ProjectData.getFormTemplatesFromProject(projectLabel.id);
+      const data = await response;
+      if(data.length === 0){
+        formDefs.push({name:"No recent projects found",description:"", id:"", type:""});
       }
-    })
-    .catch(error => {console.log("Caught this error", error.message); 
-        menuItemsToReturn.push(
-            <MenuItem
-            key="1" title={error.essage}
-            onClick={(value) => {close()}}
-            >Ooops - {error.message}</MenuItem>)
-    })
-    return (menuItemsToReturn);
+      else{
+        for (var x = 0; x < data.length; x++){
+          //loop through the forms result
+          formDefs.push({name:data[x].displayName, description:data[x].displayName, id:data[x].formId, type:data[x].type});
+        }
+        setformDetails(formDefs);
+      }
+    }
+    if (projectLabel.id === ""){
+      setformLabel({displayName:"Select a project first",description:"", id:"", type:""});
     }
     else
     {
-      return ([<MenuItem key="1">Please Select a Project First</MenuItem>])
+      setformLabel({displayName:"Select a form definition",description:"", id:"", type:""});
     }
-  },[BC1Details, BC2Details]) 
+  })();
+},[projectLabel,isAuthorized])
 
-//end forms template chooser
 
-//handle the change to breadcrumb2
-const handleFormSelectionChange = useCallback(value => {
-  //get form details
-  ProjectData.getFormDetailsFromId(value).then(formData => {
-    setBC2Details({displayName: formData.displayName ,type: formData.type , formId: formData.id ,status: formData.status , proJid: BC1Details.id})
-  });
-}, [BC1Details]);
+// formulate the menu entries - update when something is picked or the contextid changes in the url
+const issueTemplates = useCallback((close: () => void) => {
+  var menuItemsToReturn : JSX.Element[] = [];
+  for (var x = 0; x < formDetails.length; x++){
+      menuItemsToReturn.push(
+      <MenuItem
+      key={formDetails[x].id}
+      title={formDetails[x].name}
+      value={formDetails[x].id}
+      id={formDetails[x].id}
+      onClick={(value: any) => {         
+        handleFormChange(value);
+          close(); // close the dropdown menu
+      }}
+      isSelected={(formDetails[x].name === formLabel.displayName) ? true : false}
+      >
+      {formDetails[x].name}
+      </MenuItem>
+      )
+  }
+
+  return(menuItemsToReturn);
+},[formLabel]) 
+
+const handleFormChange = useCallback(value =>{
+  //got the ID(GUID) so find the displayName
+  formDetails.forEach(form =>{
+    if(form.id === value)
+    {
+      setformLabel({displayName:form.name, description:form.description, id:form.id, type:form.type});
+    // console.log(form.id);
+    }
+  })
+},[formDetails])
 
 // setup for the sidebar
 useEffect(() =>  {
   if (sideBarChosen === 0) // Home Page
   {
     const bodyData: JSX.Element[] = [];
-    bodyData.push(<MyHomePage key="HomePageStuff" selectedProjectId={BC1Details.id}  selectedFormsId={BC2Details.formId} selectedFormsType={BC2Details.type} verboseLogging={verboseLogging}/>);
+    bodyData.push(<MyHomePage key="HomePageStuff" selectedProjectId={projectLabel.id}  selectedFormsId={formLabel.id} selectedFormsType={formLabel.type} verboseLogging={verboseLogging}/>);
     setbodyData(bodyData);
     sethomeFlag(true);
     setsettingsFlag(false);
@@ -201,7 +245,7 @@ useEffect(() =>  {
     sethomeFlag(false);
     setsettingsFlag(true);
   }
-},[sideBarChosen, BC1Details, BC2Details, verboseLogging])
+},[sideBarChosen, formLabel, projectLabel, verboseLogging])
 
   return (
     <div className="app">
@@ -213,15 +257,15 @@ useEffect(() =>  {
                 <HeaderButton
                   key="projectBreadcrumb"
                   menuItems={recentProject}
-                  name={BC1Details.name}
-                  description={BC1Details.description}
+                  name={projectLabel.displayName}
+                  description={projectLabel.description}
                   startIcon={<SvgNetwork />}
                 />,
                 <HeaderButton
                 key="formBreadcrumb"
                 menuItems={issueTemplates}
-                name={BC2Details.displayName}
-                description={BC2Details.type}
+                name={formLabel.displayName}
+                description={formLabel.type}
                 startIcon={<SvgNetwork />}
               />
             ]}
