@@ -116,6 +116,10 @@ export class ExcelImporter{
                     delete data.state;
                 }
 
+                if("formGUID" in data){
+                    delete data.formGUID;
+                }
+
                 if(verboseLogging){console.log("Assignee email type:",typeof data.assignee.email)};
                 if(typeof data.assignee.email == "undefined"){
                     if(verboseLogging){console.log("Cleaning out assignee completely")};
@@ -308,7 +312,7 @@ export class ExcelImporter{
         statusUpdates("Upload completed");
         loggingData.push(<div>Upload complete</div>);
         loggingData.push(<div><h2>Summary Data</h2></div>);
-        loggingData.push(<div>Total issues created: {currRow-2}</div>);
+        loggingData.push(<div>Total issues created/updated: {currRow-2}</div>);
         loggingData.push(<div>Total issues with errors: {errorCount}</div>);
         loggingData.push(<div>Time started: {timeStartedHolder}</div>);
         const finishedTime = new Date();

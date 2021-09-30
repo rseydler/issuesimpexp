@@ -82,16 +82,16 @@ export class ExcelExporter{
         const wb = new Excel.Workbook();
         var ws = wb.addWorksheet("IRS");
         var currCol = 1;
-        ws.getCell(1, currCol++).value = "id"; const xlColid = currCol;
+        ws.getCell(1, currCol++).value = "id"; const xlColid = currCol-1;
         ws.getCell(1, currCol-1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FFFFFF00'} };; //want yellow
-        ws.getCell(1, currCol++).value = "number"; const xlColnumber = currCol;
+        ws.getCell(1, currCol++).value = "number"; const xlColnumber = currCol-1;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid',fgColor:{argb:'FFFFFF00'}};; //want yellow
-        ws.getCell(1, currCol++).value = "displayName"; const xlColvalue = currCol;
+        ws.getCell(1, currCol++).value = "displayName"; const xlColvalue = currCol-1;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "subject"; const xlColsubject = currCol;
-        ws.getCell(1, currCol++).value = "description"; const xlColdescription = currCol;
-        ws.getCell(1, currCol++).value = "location.latitude"; const xlCollocationlatitude = currCol;
-        ws.getCell(1, currCol++).value = "location.longitude"; const xlCollocationlogitude = currCol;
+        ws.getCell(1, currCol++).value = "subject"; const xlColsubject = currCol-1;
+        ws.getCell(1, currCol++).value = "description"; const xlColdescription = currCol-1;
+        ws.getCell(1, currCol++).value = "location.latitude"; const xlCollocationlatitude = currCol-1;
+        ws.getCell(1, currCol++).value = "location.longitude"; const xlCollocationlogitude = currCol-1;
 
         // no longer valid for Design Review.
         // ws.getCell(1, currCol++).value = "container.id";
@@ -102,25 +102,27 @@ export class ExcelExporter{
         // ws.getCell(1, currCol++).value = "item.url";
         // ws.getCell(1, currCol++).value = "elementId";
 
-        ws.getCell(1, currCol++).value = "modelPin.location.x"; const xlColmodelpinglocationx = currCol;
-        ws.getCell(1, currCol++).value = "modelPin.location.y"; const xlColmodelpinglocationy = currCol;
-        ws.getCell(1, currCol++).value = "modelPin.location.z"; const xlColmodelpinglocationz = currCol;
+        ws.getCell(1, currCol++).value = "modelPin.location.x"; const xlColmodelpinglocationx = currCol-1;
+        ws.getCell(1, currCol++).value = "modelPin.location.y"; const xlColmodelpinglocationy = currCol-1;
+        ws.getCell(1, currCol++).value = "modelPin.location.z"; const xlColmodelpinglocationz = currCol-1;
 
-        ws.getCell(1, currCol++).value = "createdBy"; const xlColcreatedBy = currCol;
+        ws.getCell(1, currCol++).value = "createdBy"; const xlColcreatedBy = currCol-1;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "createdDateTime"; const xlColcreatedDateTime = currCol;
+        ws.getCell(1, currCol++).value = "createdDateTime"; const xlColcreatedDateTime = currCol-1;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "status"; const xlColstatus = currCol;
+        ws.getCell(1, currCol++).value = "status"; const xlColstatus = currCol-1;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "assignee.displayName"; const xlColassigneedisplayName = currCol;
+        ws.getCell(1, currCol++).value = "assignee.displayName"; const xlColassigneedisplayName = currCol-1;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "assignee.email"; const xlColassigneeemail = currCol;
-        ws.getCell(1, currCol++).value = "assignee.id"; const xlColassigneeid = currCol;
+        ws.getCell(1, currCol++).value = "assignee.email"; const xlColassigneeemail = currCol-1;
+        ws.getCell(1, currCol++).value = "assignee.id"; const xlColassigneeid = currCol-1;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "dueDate"; const xlColdueDate = currCol;
-        ws.getCell(1, currCol++).value = "state"; const xlColstate = currCol;
+        ws.getCell(1, currCol++).value = "dueDate"; const xlColdueDate = currCol-1;
+        ws.getCell(1, currCol++).value = "state"; const xlColstate = currCol-1;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "assignees"; const xlColassignees = currCol;
+        ws.getCell(1, currCol++).value = "assignees"; const xlColassignees = currCol-1;
+        ws.getCell(1, currCol++).value = "formGUID"; const xlColformGUID = currCol-1;
+        ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
 
         var userPropsStartAtCol = currCol;
         var currRow = 1;
@@ -411,6 +413,10 @@ export class ExcelExporter{
                     }
                 }
 
+                // add in formGUID
+                const formGUIDObj = ExcelExporter.decodeCompositeID(ws.getCell(currRow, xlColid).value as string);
+                ws.getCell(currRow, xlColformGUID).value = formGUIDObj.instanceGuid;
+
                 // user properties. things get dynamic from here.
                 if ("properties" in json.issue)
                 {
@@ -584,5 +590,49 @@ export class ExcelExporter{
             console.log(error.message);
         });
     }
+
+    private static newGUIDfromBytesArray(guid: Uint8Array){
+        var numArray = Array.prototype.slice.call(guid);
+        numArray = numArray.slice(0, 4).reverse().concat(numArray.slice(4,6).reverse()).concat(numArray.slice(6,8).reverse()).concat(numArray.slice(8))
+        var strGuidArray = numArray.map(function(item) {
+            // return hex value with "0" padding
+            return ('00'+item.toString(16).toUpperCase()).substr(-2,2);
+        })
+
+        var tmpGuid = "";
+        for (var i = 0; i < 16; i++){
+          tmpGuid += i === 4 || i === 6 || i === 8 || i === 10 ? "-" : "";
+          tmpGuid += strGuidArray[i];
+        }
+        return tmpGuid.toLowerCase();
+      } 
+
+      //
+      //Get the form GUID from the composite mashed ID
+      // returns object .projectGUID and
+      //                .instanceGUID
+      public static decodeCompositeID(compositeId:string){
+        var compositeBase64 = compositeId.replaceAll("-", "+");
+        compositeBase64 = compositeBase64.replaceAll("_","/");
+        switch (compositeBase64.length % 4) {
+          case 2:
+            compositeBase64 += "=="; 
+            break;
+          case 3: 
+            compositeBase64 += "="; 
+            break;
+        }
+        const data = atob(decodeURIComponent(compositeBase64));
+        const compositeBytes = Uint8Array.from(data, b => b.charCodeAt(0));
+        const projectGUID = compositeBytes.slice(0,16);
+        const instanceGUID = compositeBytes.slice(16);
+        var obj = {
+          "projectGuid" : this.newGUIDfromBytesArray(projectGUID),
+          "instanceGuid" : this.newGUIDfromBytesArray(instanceGUID)
+        }
+        //console.log("got projectGuid of",obj.projectGuid);
+        //console.log("got instanceGUID of",obj.instanceGuid);
+        return obj;
+      }
 
 }
