@@ -391,7 +391,7 @@ export class ExcelImporter{
           case "value":
             if (value.includes(" "))
             {
-                value = value.replace(" ", "__x0020__");
+                value = value.replaceAll(" ", "__x0020__");
             }
             myObj[value] = stuff;
             break;

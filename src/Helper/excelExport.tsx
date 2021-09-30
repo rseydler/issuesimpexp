@@ -82,42 +82,45 @@ export class ExcelExporter{
         const wb = new Excel.Workbook();
         var ws = wb.addWorksheet("IRS");
         var currCol = 1;
-        ws.getCell(1, currCol++).value = "id";
+        ws.getCell(1, currCol++).value = "id"; const xlColid = currCol;
         ws.getCell(1, currCol-1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FFFFFF00'} };; //want yellow
-        ws.getCell(1, currCol++).value = "number";
+        ws.getCell(1, currCol++).value = "number"; const xlColnumber = currCol;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid',fgColor:{argb:'FFFFFF00'}};; //want yellow
-        ws.getCell(1, currCol++).value = "displayName";
+        ws.getCell(1, currCol++).value = "displayName"; const xlColvalue = currCol;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "subject";
-        ws.getCell(1, currCol++).value = "description";
-        ws.getCell(1, currCol++).value = "location.latitude";
-        ws.getCell(1, currCol++).value = "location.longitude";
-        ws.getCell(1, currCol++).value = "container.id";
-        ws.getCell(1, currCol++).value = "container.url";
-        ws.getCell(1, currCol++).value = "container.displayName";
-        ws.getCell(1, currCol++).value = "item.id";
-        ws.getCell(1, currCol++).value = "item.displayName";
-        ws.getCell(1, currCol++).value = "item.url";
-        ws.getCell(1, currCol++).value = "elementId";
-        ws.getCell(1, currCol++).value = "modelPin.location.x";
-        ws.getCell(1, currCol++).value = "modelPin.location.y";
-        ws.getCell(1, currCol++).value = "modelPin.location.z";
+        ws.getCell(1, currCol++).value = "subject"; const xlColsubject = currCol;
+        ws.getCell(1, currCol++).value = "description"; const xlColdescription = currCol;
+        ws.getCell(1, currCol++).value = "location.latitude"; const xlCollocationlatitude = currCol;
+        ws.getCell(1, currCol++).value = "location.longitude"; const xlCollocationlogitude = currCol;
 
-        ws.getCell(1, currCol++).value = "createdBy";
+        // no longer valid for Design Review.
+        // ws.getCell(1, currCol++).value = "container.id";
+        // ws.getCell(1, currCol++).value = "container.url";
+        // ws.getCell(1, currCol++).value = "container.displayName";
+        // ws.getCell(1, currCol++).value = "item.id";
+        // ws.getCell(1, currCol++).value = "item.displayName";
+        // ws.getCell(1, currCol++).value = "item.url";
+        // ws.getCell(1, currCol++).value = "elementId";
+
+        ws.getCell(1, currCol++).value = "modelPin.location.x"; const xlColmodelpinglocationx = currCol;
+        ws.getCell(1, currCol++).value = "modelPin.location.y"; const xlColmodelpinglocationy = currCol;
+        ws.getCell(1, currCol++).value = "modelPin.location.z"; const xlColmodelpinglocationz = currCol;
+
+        ws.getCell(1, currCol++).value = "createdBy"; const xlColcreatedBy = currCol;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "createdDateTime";
+        ws.getCell(1, currCol++).value = "createdDateTime"; const xlColcreatedDateTime = currCol;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "status";
+        ws.getCell(1, currCol++).value = "status"; const xlColstatus = currCol;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "assignee.displayName";
+        ws.getCell(1, currCol++).value = "assignee.displayName"; const xlColassigneedisplayName = currCol;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "assignee.email";
-        ws.getCell(1, currCol++).value = "assignee.id";
+        ws.getCell(1, currCol++).value = "assignee.email"; const xlColassigneeemail = currCol;
+        ws.getCell(1, currCol++).value = "assignee.id"; const xlColassigneeid = currCol;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "dueDate";
-        ws.getCell(1, currCol++).value = "state";
+        ws.getCell(1, currCol++).value = "dueDate"; const xlColdueDate = currCol;
+        ws.getCell(1, currCol++).value = "state"; const xlColstate = currCol;
         ws.getCell(1, currCol - 1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FF0000'}};; //want red
-        ws.getCell(1, currCol++).value = "assignees";
+        ws.getCell(1, currCol++).value = "assignees"; const xlColassignees = currCol;
 
         var userPropsStartAtCol = currCol;
         var currRow = 1;
@@ -156,64 +159,65 @@ export class ExcelExporter{
                 loggingData.push(<div>Exporting form to excel row: {currRow}</div>);
                 gotData = true;
                 if ("id" in json.issue){
-                    ws.getCell(currRow, 1).value = json.issue.id;
-                    if (ws.getCell(1, 1).note === undefined)
+                    ws.getCell(currRow, xlColid).value = json.issue.id;
+                    if (ws.getCell(1, xlColid).note === undefined)
                     {
-                        ws.getCell(1, 1).note = typeof json.issue.id;
+                        ws.getCell(1, xlColid).note = typeof json.issue.id;
                     }
                 }
 
                 if ("number" in json.issue){
-                    ws.getCell(currRow, 2).value = json.issue.number;
-                    if (ws.getCell(1, 2).note === undefined)
+                    ws.getCell(currRow, xlColnumber).value = json.issue.number;
+                    if (ws.getCell(1, xlColnumber).note === undefined)
                     {
-                        ws.getCell(1, 2).note = typeof json.issue.number;
+                        ws.getCell(1, xlColnumber).note = typeof json.issue.number;
                     }
                 }
 
                 if ("displayName" in json.issue){
-                    ws.getCell(currRow, 3).value = json.issue.displayName;
-                    if (ws.getCell(1, 3).note === undefined)
+                    ws.getCell(currRow, xlColassigneedisplayName).value = json.issue.displayName;
+                    if (ws.getCell(1, xlColassigneedisplayName).note === undefined)
                     {
-                        ws.getCell(1, 3).note = typeof json.issue.displayName;
+                        ws.getCell(1, xlColassigneedisplayName).note = typeof json.issue.displayName;
                     }
                 }
 
                 if ("subject" in json.issue){
-                    ws.getCell(currRow, 4).value = json.issue.subject;
-                    if (ws.getCell(1, 4).note === undefined)
+                    ws.getCell(currRow, xlColsubject).value = json.issue.subject;
+                    if (ws.getCell(1, xlColsubject).note === undefined)
                     {
-                        ws.getCell(1, 4).note = typeof json.issue.subject;
+                        ws.getCell(1, xlColsubject).note = typeof json.issue.subject;
                     }
                 }
 
                 if ("description" in json.issue){
-                    ws.getCell(currRow, 5).value = json.issue.description;
-                    if (ws.getCell(1, 5).note === undefined)
+                    ws.getCell(currRow, xlColdescription).value = json.issue.description;
+                    if (ws.getCell(1, xlColdescription).note === undefined)
                     {
-                        ws.getCell(1, 5).note = typeof json.issue.description;
+                        ws.getCell(1, xlColdescription).note = typeof json.issue.description;
                     }
                 }
 
                 if ("location" in json.issue){
                     if ("latitude" in json.issue.location){
-                        ws.getCell(currRow, 6).value = json.issue.location.latitude;
-                        if (ws.getCell(1, 6).note === undefined)
+                        ws.getCell(currRow, xlCollocationlatitude).value = json.issue.location.latitude;
+                        if (ws.getCell(1, xlCollocationlatitude).note === undefined)
                         {
-                            ws.getCell(1, 6).note = typeof json.issue.location.latitude;
+                            ws.getCell(1, xlCollocationlatitude).note = typeof json.issue.location.latitude;
                         }
                     }
 
                     if ("longitude" in json.issue.location){
-                        ws.getCell(currRow, 7).value = json.issue.location.longitude;
-                        if (ws.getCell(1, 7).note === undefined)
+                        ws.getCell(currRow, xlCollocationlogitude).value = json.issue.location.longitude;
+                        if (ws.getCell(1, xlCollocationlogitude).note === undefined)
                         {
-                            ws.getCell(1, 7).note = typeof json.issue.location.longitude;
+                            ws.getCell(1, xlCollocationlogitude).note = typeof json.issue.location.longitude;
                         }
                     }
                 }
 
-                if ("container" in json.issue){
+                // no longer valid for Design review
+                /* if ("container" in json.issue){
                     if ("id" in json.issue.container){
                         ws.getCell(currRow, 8).value = json.issue.container.id;
                         if (ws.getCell(1, 8).note === undefined)
@@ -270,64 +274,64 @@ export class ExcelExporter{
                     {
                         ws.getCell(1, 14).note = typeof json.issue.elementId;
                     }
-                }
+                } */
 
                 if ("modelPin" in json.issue){
                     if ("location" in json.issue.modelPin){
                         if ("x" in json.issue.modelPin.location){
-                            ws.getCell(currRow, 15).value = json.issue.modelPin.location.x;
-                            if (ws.getCell(1, 15).note === undefined)
+                            ws.getCell(currRow, xlColmodelpinglocationx).value = json.issue.modelPin.location.x;
+                            if (ws.getCell(1, xlColmodelpinglocationx).note === undefined)
                             {
-                                ws.getCell(1, 15).note = typeof json.issue.modelPin.location.x;
+                                ws.getCell(1, xlColmodelpinglocationx).note = typeof json.issue.modelPin.location.x;
                             }
                         }
                         if ("y" in json.issue.modelPin.location){
-                            ws.getCell(currRow, 16).value = json.issue.modelPin.location.y;
-                            if (ws.getCell(1, 16).note === undefined)
+                            ws.getCell(currRow, xlColmodelpinglocationy).value = json.issue.modelPin.location.y;
+                            if (ws.getCell(1, xlColmodelpinglocationy).note === undefined)
                             {
-                                ws.getCell(1, 16).note = typeof json.issue.modelPin.location.y;
+                                ws.getCell(1, xlColmodelpinglocationy).note = typeof json.issue.modelPin.location.y;
                             }
                         }
                         if ("z" in json.issue.modelPin.location){
-                            ws.getCell(currRow, 17).value = json.issue.modelPin.location.z;
-                            if (ws.getCell(1, 17).note === undefined)
+                            ws.getCell(currRow, xlColmodelpinglocationz).value = json.issue.modelPin.location.z;
+                            if (ws.getCell(1, xlColmodelpinglocationz).note === undefined)
                             {
-                                ws.getCell(1, 17).note = typeof json.issue.modelPin.location.z;
+                                ws.getCell(1, xlColmodelpinglocationz).note = typeof json.issue.modelPin.location.z;
                             }
                         }
                     }
                 }
 
                 if ("createdBy" in json.issue){
-                    ws.getCell(currRow, 18).value = json.issue.createdBy;
-                    if (ws.getCell(1, 18).note === undefined)
+                    ws.getCell(currRow, xlColcreatedBy).value = json.issue.createdBy;
+                    if (ws.getCell(1, xlColcreatedBy).note === undefined)
                     {
-                        ws.getCell(1, 18).note = typeof json.issue.createdBy;
+                        ws.getCell(1, xlColcreatedBy).note = typeof json.issue.createdBy;
                     }
                 }
 
                 if ("createdDateTime" in json.issue){
-                    ws.getCell(currRow, 19).value = json.issue.createdDateTime;
-                    if (ws.getCell(1, 19).note === undefined)
+                    ws.getCell(currRow, xlColcreatedDateTime).value = json.issue.createdDateTime;
+                    if (ws.getCell(1, xlColcreatedDateTime).note === undefined)
                     {
-                        ws.getCell(1, 19).note = typeof json.issue.createdDateTime;
+                        ws.getCell(1, xlColcreatedDateTime).note = typeof json.issue.createdDateTime;
                     }
                 }
 
                 if ("status" in json.issue){
-                    ws.getCell(currRow, 20).value = json.issue.status;
-                    if (ws.getCell(1, 20).note === undefined)
+                    ws.getCell(currRow, xlColstatus).value = json.issue.status;
+                    if (ws.getCell(1, xlColstatus).note === undefined)
                     {
-                        ws.getCell(1, 20).note = typeof json.issue.status;
+                        ws.getCell(1, xlColstatus).note = typeof json.issue.status;
                     }
                 }
 
                 if ("assignee" in json.issue){
                     if ("displayName" in json.issue.assignee){
-                        ws.getCell(currRow, 21).value = json.issue.assignee.displayName;
-                        if (ws.getCell(1, 21).note === undefined)
+                        ws.getCell(currRow, xlColassigneedisplayName).value = json.issue.assignee.displayName;
+                        if (ws.getCell(1, xlColassigneedisplayName).note === undefined)
                         {
-                            ws.getCell(1, 21).note = typeof json.issue.assignee.displayName;
+                            ws.getCell(1, xlColassigneedisplayName).note = typeof json.issue.assignee.displayName;
                         }
                     }
 
@@ -341,38 +345,38 @@ export class ExcelExporter{
                         if (usersEmail === "0")
                         {
                             // it is a role
-                            ws.getCell(currRow, 22).value = json.issue.assignee.displayName;
-                            if (ws.getCell(1, 22).note === undefined)
+                            ws.getCell(currRow, xlColassigneeemail).value = json.issue.assignee.displayName;
+                            if (ws.getCell(1, xlColassigneeemail).note === undefined)
                             {
-                                ws.getCell(1, 22).note = typeof json.issue.assignee.displayName;
+                                ws.getCell(1, xlColassigneeemail).note = typeof json.issue.assignee.displayName;
                             }
                         }
                         else{
-                            ws.getCell(currRow, 22).value = usersEmail;
+                            ws.getCell(currRow, xlColassigneeemail).value = usersEmail;
                         }
 
-                        ws.getCell(currRow, 23).value = json.issue.assignee.id;
-                        if (ws.getCell(1, 23).note === undefined)
+                        ws.getCell(currRow, xlColassigneeid).value = json.issue.assignee.id;
+                        if (ws.getCell(1, xlColassigneeid).note === undefined)
                         {
-                            ws.getCell(1, 23).note = typeof json.issue.assignee.id;
+                            ws.getCell(1, xlColassigneeid).note = typeof json.issue.assignee.id;
                         }
                     }
                 }
 
                 if ("dueDate" in json.issue){
-                    ws.getCell(currRow, 24).value = json.issue.dueDate;
-                    if (ws.getCell(1, 24).note === undefined)
+                    ws.getCell(currRow, xlColdueDate).value = json.issue.dueDate;
+                    if (ws.getCell(1, xlColdueDate).note === undefined)
                     {
-                        ws.getCell(1, 24).note = typeof json.issue.dueDate;
+                        ws.getCell(1, xlColdueDate).note = typeof json.issue.dueDate;
                     }
                 }
 
                 if ("state" in json.issue){
-                    ws.getCell(currRow, 25).value = json.issue.state;
+                    ws.getCell(currRow, xlColstate).value = json.issue.state;
                    // console.log(ws.getCell(1, 25).note,(ws.getCell(1, 25).note === undefined))
-                    if (ws.getCell(1, 25).note === undefined)
+                    if (ws.getCell(1, xlColstate).note === undefined)
                     {
-                        ws.getCell(1, 25).note = typeof json.issue.state;
+                        ws.getCell(1, xlColstate).note = typeof json.issue.state;
                     }
                 }
                // console.log(json.issue);
@@ -400,10 +404,10 @@ export class ExcelExporter{
                         statusUpdates(`Exporting form to excel row: ${currRow} Invalid data found for assignees.`);
                         loggingData.push(<div className="errRow">Exporting form to excel row: {currRow} Invalid data found for assignees.</div>);
                     }
-                    ws.getCell(currRow, 26).value = strAssignees;
-                    if (ws.getCell(1, 26).note === undefined)
+                    ws.getCell(currRow, xlColassignees).value = strAssignees;
+                    if (ws.getCell(1, xlColassignees).note === undefined)
                     {
-                        ws.getCell(1, 26).note = "string";
+                        ws.getCell(1, xlColassignees).note = "string";
                     }
                 }
 
@@ -420,7 +424,7 @@ export class ExcelExporter{
                             var header = property;
                             if(header.includes("__x0020__"))
                             {
-                                header = header.replace("__x0020__"," ");
+                                header = header.replaceAll("__x0020__"," ");
                             }
                             if (ws.getCell(1,x).value === "properties." + header){
                                 ws.getCell(currRow,x).value = json.issue.properties[property]
@@ -433,7 +437,7 @@ export class ExcelExporter{
                             var header = property;
                             if(header.includes("__x0020__"))
                             {
-                                header = header.replace("__x0020__"," ");
+                                header = header.replaceAll("__x0020__"," ");
                             }
                             ws.getCell(1,currCol).value = "properties." + header;
                          //   console.log(`Adding property to excel named ${header}` );
