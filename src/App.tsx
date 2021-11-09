@@ -305,7 +305,8 @@ useEffect(() =>  {
           <div className="app-content">
             {isLoggingIn ? ( <span>"Logging in...."</span> ) : (!isAuthorized ? (<h1>You need to login first</h1>) : (bodyData))}
           </div>
-          <Footer />
+          {//<Footer />
+          }
         </div>
     </div>
   </div>

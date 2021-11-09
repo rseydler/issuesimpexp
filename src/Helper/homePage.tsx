@@ -28,11 +28,13 @@ function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType, verb
  
     if (selectedProjectId.trim() === "")
     {
+      info.push(<h1 key="h1">This website is due to be shutdown on the 11th of November. If you have not recieved a contact email by the 10th please email ron.seydler@bentley.com for more information.</h1>)
         info.push(<div key="comments1">Please select a project to begin</div>);
         return(<div>{info}</div>)
     }
     if (selectedFormsId.trim() === "")
     {
+      info.push(<h1 key="h1">This website is due to be shutdown on the 11th of November. If you have not recieved a contact email by the 10th please email ron.seydler@bentley.com for more information.</h1>)
         info.push(<div key="comments2">Please select a form definition</div>);
         return(<div>{info}</div>)
     }
@@ -60,6 +62,7 @@ function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType, verb
     }
 
     //right we have enough lets make some buttons!
+    info.push(<h1 key="h1">This website is due to be shutdown on the 11th of November. If you have not recieved a contact email by the 10th please email ron.seydler@bentley.com for more information.</h1>)
     info.push(<h2 key="h2">Please select from the following options</h2>)
     info.push(<Button size="large" key="Export Button" name="Export Button" onClick={() => ExcelExporter.exportIssuesToExcel(selectedFormsId, selectedProjectId,selectedFormsType, checked, setDoing, setLogger, verboseLogging)}>Export Issues</Button>);
     info.push(<Checkbox label="Export Comments" defaultChecked={checked} key="export comments" onChange={() => setChecked(!checked)} />)
