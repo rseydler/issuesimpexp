@@ -1,37 +1,35 @@
-import { IMSLoginProper } from "./IMSLoginProper";
+import AuthorizationClient from "../AuthorizationClient";
 
 export class ProjectData{
     public static async getRecentProjects(){
-        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
-          const response = await fetch("https://api.bentley.com/projects/recents", {
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': accessToken,
-                  //  'Access-Control-Allow-Origin' : 'http://localhost:3000',
-                  },
-                })
-            //const dataRaw = await response.text(); // work around for invalid newline escaping that is present in some public api
-            //const json = JSON.parse(dataRaw);
-            // normally we would just do below but Bentley API is a little unsafe *2021/07/01*
-            const data = await response;
-            const json = await data.json();
-            var info: { id: string; displayName: string; projectNumber: string; }[] = [];
-            for (var i = 0; i < json.projects.length; i++)
-            {
-              info.push({id: json.projects[i].id, displayName: json.projects[i].displayName , projectNumber: json.projects[i].projectNumber });
-            }
-            return  info;
+      const accessToken = await (await AuthorizationClient.oidcClient.getAccessToken()).toTokenString();
+      //console.log(accessToken);
+      const response = await fetch("https://api.bentley.com/projects/recents", {
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': accessToken,
+                //'Access-Control-Allow-Origin' : 'http://localhost:3000',
+              },
+            })
+        const data = await response;
+        const json = await data.json();
+        var info: { id: string; displayName: string; projectNumber: string; }[] = [];
+        for (var i = 0; i < json.projects.length; i++)
+        {
+          info.push({id: json.projects[i].id, displayName: json.projects[i].displayName , projectNumber: json.projects[i].projectNumber });
+        }
+        return  info;
     }
 
     public static async getProjectData(projectId: string){
-        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+      const accessToken = await (await AuthorizationClient.oidcClient.getAccessToken()).toTokenString();
         const response = await fetch("https://api.bentley.com/projects/" + projectId, { //https://api.bentley.com/projects/favorites?top=1000
             mode: 'cors',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': accessToken,
-                // 'Access-Control-Allow-Origin' : 'http://localhost:3000',
+                //'Access-Control-Allow-Origin' : 'http://localhost:3000',
                 },
             })
         const data = await response;
@@ -45,7 +43,7 @@ export class ProjectData{
           console.log("Invalid projectId passed");
           return ([{id:"", formId:"" ,displayName:"", type:""}]);
         }
-        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+        const accessToken = await (await AuthorizationClient.oidcClient.getAccessToken()).toTokenString();
         const response = await fetch("https://api.bentley.com/issues/formDefinitions?projectId=" + projectId, { 
         mode: 'cors',
         headers: {
@@ -71,7 +69,7 @@ export class ProjectData{
       }
 
       public static async getFormDetailsFromId(formId: string){
-          const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+        const accessToken = await (await AuthorizationClient.oidcClient.getAccessToken()).toTokenString();
           const response = await fetch("https://api.bentley.com/issues/formDefinitions/" + formId, { //GET https://api.bentley.com/issues/formDefinitions/{id}
                 mode: 'cors',
                 headers: {

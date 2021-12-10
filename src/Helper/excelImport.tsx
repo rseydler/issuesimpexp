@@ -1,9 +1,9 @@
 // @ts-nocheck
 
 import * as Excel from 'exceljs';
-import { IMSLoginProper } from './IMSLoginProper';
-import React, { useCallback } from 'react'
-import { ResponseError } from '@bentley/itwin-client';
+import React, { useCallback } from 'react';
+import { tokenToString } from 'typescript';
+import AuthorizationClient from '../AuthorizationClient';
 
 interface LooseObject {
     [key: string]: any
@@ -12,7 +12,8 @@ interface LooseObject {
 export class ExcelImporter{
 
     public static async importIssuesFromExcel(selectedFile:FileReader, selectedProject:string, selectedFormTemplate:string, statusUpdates:any, logger:any, verboseLogging:boolean){
-        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
+        const accessToken = await (await AuthorizationClient.oidcClient.getAccessToken()).toTokenString();
+        const accessTokenTime = await (await AuthorizationClient.oidcClient.getAccessToken()).getStartsAt();
         const timeStarted = new Date();
         const timeStartedHolder = timeStarted.toLocaleTimeString([],{hour: '2-digit', minute: '2-digit', second: '2-digit'});
         var errorCount = 0;
@@ -28,8 +29,6 @@ export class ExcelImporter{
         statusUpdates("Looking for IRS worksheet");
         loggingData.push(<div>Looking for worksheet named IRS</div>);
         const ws = wb.getWorksheet("IRS");
-        console.log(`Extra logging enabled: ${verboseLogging}`);
-
         if (ws.name==="IRS"){
             var currColumn =1;
             var currRow =2;
@@ -40,7 +39,6 @@ export class ExcelImporter{
             //find the column to log stuff into
             while(!(ws.getCell(1,logColumn).value===null)){
                 logColumn++;
-            // console.log("columns..", logColumn);
             }
             statusUpdates("Processing row data");
             loggingData.push(<div>Processing row data....</div>);
@@ -56,13 +54,10 @@ export class ExcelImporter{
                     if (!(ws.getCell(currRow,currColumn).value === null)){
                     // if the header has a dot then make sure the full property exists!
                     let currentCellHeaderValue:string = ws.getCell(1,currColumn).value?.toString() as string;
-                // console.log("headercellvalue",currentCellHeaderValue);
                         if (currentCellHeaderValue.includes(".")){
                             //make sure the full notation exists
                             const dsx = currentCellHeaderValue.split(".");
-                            // largest is 3 Modelpin.location.x y z
-                            // 0 is at the object level. easy
-                            // does it exist?
+                            
                             switch (dsx.length) {
                             case 3:
                                 ExcelImporter.updateObject(data,"object",dsx[0]); //modelpin
@@ -81,18 +76,18 @@ export class ExcelImporter{
                             default:
                                 break;
                             }
-                        // console.log("2nd/3rd level",data)
             
                         }
                             else{
                                 //blindly throw it in
                                 data[currentCellHeaderValue] = ws.getCell(currRow,currColumn).value;
-                            // console.log("DataIs",data);
                         }
                     }
-                    //logger(loggingData);
                     currColumn++;
                 }
+                //#region remove invalid upload props
+                // some things we cannot upload
+                // get rid of those
                 if ("id" in data){
                     delete data.id;
                 }
@@ -119,7 +114,9 @@ export class ExcelImporter{
                 if("formGUID" in data){
                     delete data.formGUID;
                 }
+                //#endregion
 
+                //figure out who the assignee is.
                 if(verboseLogging){console.log("Assignee email type:",typeof data.assignee.email)};
                 if(typeof data.assignee.email == "undefined"){
                     if(verboseLogging){console.log("Cleaning out assignee completely")};
@@ -193,7 +190,6 @@ export class ExcelImporter{
                     }
                 }
                 //work on the assignees
-                // SEYDLER|0|91d7cf3f-8ba1-406b-b0de-9a49c1a86d05||Ron Seydler|Ron.Seydler@bentley.com|fe0bd0e6-d9dc-4dec-b013-0bcfbc05a66c
                 //first split them up by ||
                 if(typeof(data.assignees) === "string"){
                     if(data.assignees.trim() === ""){
@@ -276,7 +272,6 @@ export class ExcelImporter{
                     loggingData.push(<div>Processing row {currRow} : Something weird happened</div>);
                     console.log(`Processing row ${currRow} ooooops ${error}`);
                 }
-                //console.log("Upload is:",JSON.stringify(data));
                 const existingFormId = ws.getCell(currRow,1).value;
                 if(existingFormId===null || existingFormId===""){
                     ExcelImporter.updateObject(data,"value","formId", selectedFormTemplate);
@@ -285,9 +280,7 @@ export class ExcelImporter{
                 if(processThisRow){
                     statusUpdates(`Processing row ${currRow} uploading form now...`);
                     loggingData.push(<div>Processing row {currRow} : Uploading form</div>);
-                    //statusUpdates(loggingData);
                     logger([...loggingData]);
-                    //console.log("Pushing this data",JSON.stringify(data));
                     await this.pushInTheChanges(JSON.stringify(data),existingFormId===null?"":existingFormId,selectedFormTemplate, loggingData, verboseLogging, accessToken, errorCount, processCount);
                 }
                 else{
@@ -306,7 +299,6 @@ export class ExcelImporter{
             statusUpdates("IRS Sheet not found in the selected workbook.");
             loggingData.push(<div className="errRow">IRS Sheet not found in the selected workbook.</div>);
             alert("There was no matiching IRS sheet in the workbook selected.")
-           // console.log("no match for IRS");
         }
         
         statusUpdates("Upload completed");
@@ -322,14 +314,10 @@ export class ExcelImporter{
     }
 
     public static async pushInTheChanges(theIssue:string, existingId:string, selectedFormId:string, loggingData:any, verboseLogging:boolean, accessToken:any, errorCount:any, processCount:any ){
-        //const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
-        if(verboseLogging){
-            console.log("Preparing to upload this", theIssue);
-        }
-       // return;
+        if(verboseLogging){console.log("Preparing to upload this", theIssue);}
+                
         if (existingId===""){
-            
-            //new issue pump it out!
+            //new issue
             const response = await fetch(`https://api.bentley.com/issues/`, {
                 method: 'POST',
                 mode: 'cors',
@@ -340,7 +328,6 @@ export class ExcelImporter{
                 body: theIssue,
             })
             const data = await response;
-            const json = await data.json;
             if (data.status === 201)
             {
                 loggingData.push(<div>Issue created successfully</div>);
@@ -348,13 +335,13 @@ export class ExcelImporter{
                 return "1";
             }
             else{
-                console.log("GOT an error",data);
-                console.log("GOT an error",json);
+                //TODO get a better error descriptor
                 loggingData.push(<div className="errRow">Issue creation failed: {data.status} </div>);
                 errorCount++;
             }
         }
         else{
+            //existing issue
             const response = await fetch(`https://api.bentley.com/issues/${existingId}`, {
                 method: 'PATCH',
                 mode: 'cors',
@@ -365,7 +352,6 @@ export class ExcelImporter{
                   body: theIssue,
             })
             const data = await response;
-            const json = await data.json;
             if (data.status === 200 || data.status === 201)
             {
                 loggingData.push(<div>Issue updated successfully</div>);
@@ -373,8 +359,7 @@ export class ExcelImporter{
                 return "1";
             }
             else{
-                console.log("GOT an error",data);
-                console.log("GOT an error",json);
+                //TODO get a better error descriptor
                 errorCount++;
                 loggingData.push(<div className="errRow">Issue update failed: {data.status}</div>);
             }
@@ -406,9 +391,6 @@ export class ExcelImporter{
     }
 
     public static async getUsersDisplayNameFromGUID(userGuid:string, projectId:string, accessToken:any ){
-       // console.log("starting getUsersDisplayNameFromGUID", userGuid, projectId);
-       // const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
-       // console.log("got token", `https://api.bentley.com/projects/${projectId}/members/${userGuid}`);
         const response = await fetch(`https://api.bentley.com/projects/${projectId}/members/${userGuid}`, {
                 mode: 'cors',
                 headers: {
@@ -416,16 +398,13 @@ export class ExcelImporter{
                     'Authorization': accessToken,
                   },
         })
-       // console.log("queried for use ", `https://api.bentley.com/projects/${projectId}/members/${userGuid}`);
         const data = await response;
         if (data.status === 404)
         {
             //most likely a role, or use has been ejected :(
-           // console.log("got a 404");
             return "0";
         }
         const json = await data.json();
-       // console.log("member: ",json);
         if ("member" in json){
             return json.member.givenName + " " + json.member.surname;
         }
@@ -435,7 +414,6 @@ export class ExcelImporter{
     }
 
     public static async getUsersGUIDfromEmail(userEmail:string, projectId:string , accessToken:any){
-        //const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
         var looper = true; //used to force the initial call;
         var memberGUID = "";
         var urlToQuery : string = `https://api.bentley.com/projects/${projectId}/members`;
@@ -471,16 +449,14 @@ export class ExcelImporter{
                 looper = false;
             }
         }
-        // after all that let's check if it was a role or missing
+        //let's check if it was a role or missing
         if (memberGUID === ""){
             memberGUID = await this.getRoldIdFromDisplayName(userEmail, projectId, accessToken);
         }
-      //  console.log(memberGUID);
         return memberGUID;
     }
 
     public static async getRoldIdFromDisplayName(userEmail:string, projectId:string, accessToken:any){
-       // const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
         var memberGUID = "";
         var looper=true;
         var urlToQuery : string = `https://api.bentley.com/projects/${projectId}/roles`;

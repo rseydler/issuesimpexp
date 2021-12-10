@@ -1,17 +1,14 @@
 import "./App.scss";
 
-import { Viewer } from "@bentley/itwin-viewer-react";
 import React, { useCallback, useEffect, useState } from "react";
 
 import AuthorizationClient from "./AuthorizationClient";
-import { Header as OrigHeader } from "./Header";
-import {SvgHelpCircularHollow,SvgNotification, SvgAdd,SvgDelete, SvgFlag, SvgHome,SvgNetwork, SvgSearch, SvgSettings, SvgExport, SvgImport} from "@itwin/itwinui-icons-react";
-import { Button, ButtonGroup, DropdownMenu, Footer, Header, HeaderBreadcrumbs, HeaderButton, HeaderLogo, IconButton, LabeledInput, MenuItem, SidenavButton, SideNavigation, Table, Title, toaster, UserIcon, useTheme} from "@itwin/itwinui-react";
-import { IMSLoginProper } from "./Helper/IMSLoginProper";
+import { SvgHome,SvgNetwork, SvgSettings, SvgExport, } from "@itwin/itwinui-icons-react";
+import {  Header, HeaderBreadcrumbs, HeaderButton, HeaderLogo, IconButton,  MenuItem, SidenavButton, SideNavigation,  UserIcon} from "@itwin/itwinui-react";
 import { ProjectData } from "./Helper/ProjectData";
 import {ThemeButton} from "./Helper/ThemeButton"
 import MyHomePage from "./Helper/homePage"
-import { Checkbox } from "@bentley/ui-core";
+import { Checkbox, UnderlinedButton } from "@bentley/ui-core";
 
 const App: React.FC = () => {
   const [isAuthorized, setIsAuthorized] = useState(
@@ -20,12 +17,7 @@ const App: React.FC = () => {
       : false
   );
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [imsToken, setimsToken] = useState("");
-  const [BC1Details, setBC1Details] = useState({name: "Pick a Project", description: "...to Start", id: ""});
-  const [BC2Details, setBC2Details] = useState({displayName: "Pick a Project First", type: "Then Pick a form Template", proJid: "", formId:"", status:""});
-  const [homeFlag, sethomeFlag] = useState(true);
-  const [settingsFlag, setsettingsFlag] = useState(false);
-  const [sideBarChosen, setsideBarChosen] = useState(0);
+  const [sideBarChosen, setsideBarChosen] = useState("issues");
   const [bodyData, setbodyData] = useState<JSX.Element[]>([]);
   const [verboseLogging, setVerboseLogging] = useState(false);
 //#region  LoginStuff
@@ -53,6 +45,7 @@ const App: React.FC = () => {
     }
   }, [isAuthorized, isLoggingIn]);
 
+  /*
   useEffect(() => {
     if (isAuthorized){
       // do the other login silent like
@@ -62,7 +55,7 @@ const App: React.FC = () => {
       })();
     }
   }, [isAuthorized])
-
+*/
   const onLoginClick = async () => {
     setIsLoggingIn(true);
     await AuthorizationClient.signIn();
@@ -220,30 +213,25 @@ const handleFormChange = useCallback(value =>{
     if(form.id === value)
     {
       setformLabel({displayName:form.name, description:form.description, id:form.id, type:form.type});
-    // console.log(form.id);
     }
   })
 },[formDetails])
 
 // setup for the sidebar
 useEffect(() =>  {
-  if (sideBarChosen === 0) // Home Page
+  if (sideBarChosen === "issues") // Home Page
   {
     const bodyData: JSX.Element[] = [];
     bodyData.push(<MyHomePage key="HomePageStuff" selectedProjectId={projectLabel.id}  selectedFormsId={formLabel.id} selectedFormsType={formLabel.type} verboseLogging={verboseLogging}/>);
     setbodyData(bodyData);
-    sethomeFlag(true);
-    setsettingsFlag(false);
   }
 
-  if (sideBarChosen === 99) // Settings Page
+  if (sideBarChosen === "settings") // Settings Page
   {
     const bodyData: JSX.Element[] = [];
     bodyData.push(<h1 key="settingsPage">Optional Settings</h1>);
     bodyData.push(<Checkbox label="Enable Logging to Console" defaultChecked={verboseLogging} key="verboseLogging" onChange={() => setVerboseLogging(!verboseLogging)} />);
     setbodyData(bodyData);
-    sethomeFlag(false);
-    setsettingsFlag(true);
   }
 },[sideBarChosen, formLabel, projectLabel, verboseLogging])
 
@@ -275,8 +263,9 @@ useEffect(() =>  {
         userIcon={
           <IconButton styleType="borderless"  onClick={() => {isAuthorized ? onLogoutClick() : onLoginClick()} }>
             <UserIcon
-            className="App-logo" 
+            className={isAuthorized===true ? "App-logo-noSpin" : "App-logo"} 
               size="medium"
+              status={isAuthorized ? "online" : "offline"}
               image={
                 <img
                   src="https://itwinplatformcdn.azureedge.net/iTwinUI/user-placeholder.png"
@@ -290,12 +279,12 @@ useEffect(() =>  {
       <div className="app-body">
         <SideNavigation
           items={[
-            <SidenavButton onClick={() => {setsideBarChosen(0)}} isActive={homeFlag} startIcon={<SvgHome />} key="Home">
+            <SidenavButton onClick={() => {setsideBarChosen("issues")}} isActive={sideBarChosen==="issues" ? true : false} startIcon={<SvgHome />} key="Home">
               Home
             </SidenavButton>
         ]}
         secondaryItems={[
-          <SidenavButton onClick={() => {setsideBarChosen(99)}} isActive={settingsFlag} startIcon={<SvgSettings />} key="settings">
+          <SidenavButton onClick={() => {setsideBarChosen("settings")}} isActive={sideBarChosen==="settings" ? true : false} startIcon={<SvgSettings />} key="settings">
             Settings
           </SidenavButton>
         ]}
@@ -303,9 +292,9 @@ useEffect(() =>  {
      
        <div className="app-container">
           <div className="app-content">
-            {isLoggingIn ? ( <span>"Logging in...."</span> ) : (!isAuthorized ? (<h1>You need to login first</h1>) : (bodyData))}
+          {isLoggingIn ? ( <span>"Logging in...."</span> ) : (!isAuthorized ? (<h1>You need to <UnderlinedButton title="login" onClick={() => { isAuthorized ? onLogoutClick() : onLoginClick(); } } children={"login"}></UnderlinedButton> first.</h1>) : (bodyData))}
           </div>
-          {//<Footer />
+          {//place your footer here <Footer />
           }
         </div>
     </div>

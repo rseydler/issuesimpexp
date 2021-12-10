@@ -1,32 +1,21 @@
 import * as Excel from 'exceljs';
-//import { saveAs } from 'file-saver'
-//import { url } from 'inspector';
-import { IMSLoginProper } from './IMSLoginProper';
 import React from 'react';
-import { RecurseToCurvesGeometryHandler } from '@bentley/geometry-core';
+import AuthorizationClient from '../AuthorizationClient';
 
 export class ExcelExporter{
-
-    public static tester(){
-        const wb = new Excel.Workbook();
-        var ws = wb.addWorksheet("IRS");
-        console.log(ws.getCell(1,1).value);
-        return;
-    }
 
     public static async exportIssuesToExcel(formTemplateId:string, projectId:string, formType:string, exportComments:boolean, statusUpdates:any, logger:any, verboseLogging:boolean){
         // get all the issues related to the formType
         // this is quicker than looping through every issue on the project
         // as you cannot filter directly on the "template" id used :(
-        console.log(`Extra logging enabled: ${verboseLogging}`);
         const formTypeFormsMatch:any[] = [];
         const loggingData:JSX.Element[] = [];
         var formTypeLooper = true; //used to force the initial call;
         statusUpdates("Grabbing up to date token");
         loggingData.push(<div><h1>Logger results</h1></div>);
         loggingData.push(<div>Grabbing up to date token</div>);
-        const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
-        const accessTokenTime = Date.now();
+        const accessToken = await (await AuthorizationClient.oidcClient.getAccessToken()).toTokenString();
+        const accessTokenTime = await (await AuthorizationClient.oidcClient.getAccessToken()).getStartsAt();
         if(verboseLogging){console.log(`Got accesstoken ${accessToken}`)};
         var urlToQuery : string = `https://api.bentley.com/issues/?top=50&projectId=${projectId}&type=${formType}`;
         while (formTypeLooper) {
@@ -75,7 +64,9 @@ export class ExcelExporter{
             return;
         }
         
-        //continuing on create up or excel.
+        //continuing on create template for excel.
+        // red columns do not go back into the system during import.
+        // yellow columns are mandatory for import
         // fixed header structure -
         statusUpdates("Building excel template...");
         loggingData.push(<div>Building excel template...</div>);
@@ -92,15 +83,6 @@ export class ExcelExporter{
         ws.getCell(1, currCol++).value = "description"; const xlColdescription = currCol-1;
         ws.getCell(1, currCol++).value = "location.latitude"; const xlCollocationlatitude = currCol-1;
         ws.getCell(1, currCol++).value = "location.longitude"; const xlCollocationlogitude = currCol-1;
-
-        // no longer valid for Design Review.
-        // ws.getCell(1, currCol++).value = "container.id";
-        // ws.getCell(1, currCol++).value = "container.url";
-        // ws.getCell(1, currCol++).value = "container.displayName";
-        // ws.getCell(1, currCol++).value = "item.id";
-        // ws.getCell(1, currCol++).value = "item.displayName";
-        // ws.getCell(1, currCol++).value = "item.url";
-        // ws.getCell(1, currCol++).value = "elementId";
 
         ws.getCell(1, currCol++).value = "modelPin.location.x"; const xlColmodelpinglocationx = currCol-1;
         ws.getCell(1, currCol++).value = "modelPin.location.y"; const xlColmodelpinglocationy = currCol-1;
@@ -218,66 +200,6 @@ export class ExcelExporter{
                     }
                 }
 
-                // no longer valid for Design review
-                /* if ("container" in json.issue){
-                    if ("id" in json.issue.container){
-                        ws.getCell(currRow, 8).value = json.issue.container.id;
-                        if (ws.getCell(1, 8).note === undefined)
-                        {
-                            ws.getCell(1, 8).note = typeof json.issue.container.id;
-                        }
-                    }
- 
-                    if ("url" in json.issue.container){
-                        ws.getCell(currRow, 9).value = json.issue.container.url;
-                        if (ws.getCell(1, 9).note === undefined)
-                        {
-                            ws.getCell(1, 9).note = typeof json.issue.container.url;
-                        }
-                    }
-
-                    if ("displayName" in json.issue.container){
-                        ws.getCell(currRow, 10).value = json.issue.container.displayName;
-                        if (ws.getCell(1, 10).note === undefined)
-                        {
-                            ws.getCell(1, 10).note = typeof json.issue.container.displayName;
-                        }
-                    }
-                }
-                if ("item" in json.issue){
-                    if ("id" in json.issue.item){
-                        ws.getCell(currRow, 11).value = json.issue.item.id;
-                        if (ws.getCell(1, 11).note === undefined)
-                        {
-                            ws.getCell(1, 11).note = typeof json.issue.item.id;
-                        }
-                    }
-
-                    if ("displayName" in json.issue.item){
-                        ws.getCell(currRow, 12).value = json.issue.item.displayName;
-                        if (ws.getCell(1, 12).note === undefined)
-                        {
-                            ws.getCell(1, 12).note = typeof json.issue.item.displayName;
-                        }
-                    }
-
-                    if ("url" in json.issue.item){
-                        ws.getCell(currRow, 13).value = json.issue.item.url;
-                        if (ws.getCell(1, 13).note === undefined)
-                        {
-                            ws.getCell(1, 13).note = typeof json.issue.item.url;
-                        }
-                    }
-                }
-
-                if ("elementId" in json.issue){
-                    ws.getCell(currRow, 14).value = json.issue.elementId;
-                    if (ws.getCell(1, 14).note === undefined)
-                    {
-                        ws.getCell(1, 14).note = typeof json.issue.elementId;
-                    }
-                } */
-
                 if ("modelPin" in json.issue){
                     if ("location" in json.issue.modelPin){
                         if ("x" in json.issue.modelPin.location){
@@ -337,7 +259,7 @@ export class ExcelExporter{
                         }
                     }
 
-                    // assignee get some extra treatment...
+                    // assignee gets some extra treatment...
                     if ("id" in json.issue.assignee){
                         statusUpdates(`Exporting form to excel row: ${currRow} Supplementing assignee data`);
                         loggingData.push(<div>Exporting form to excel row: {currRow} Supplementing assignee data</div>);
@@ -375,13 +297,11 @@ export class ExcelExporter{
 
                 if ("state" in json.issue){
                     ws.getCell(currRow, xlColstate).value = json.issue.state;
-                   // console.log(ws.getCell(1, 25).note,(ws.getCell(1, 25).note === undefined))
                     if (ws.getCell(1, xlColstate).note === undefined)
                     {
                         ws.getCell(1, xlColstate).note = typeof json.issue.state;
                     }
                 }
-               // console.log(json.issue);
                 // assignees get some extra treatment
                 if ("assignees" in json.issue){
                     statusUpdates(`Exporting form to excel row: ${currRow} Supplementing assignees data`);
@@ -425,7 +345,6 @@ export class ExcelExporter{
                     for (var property in json.issue.properties)
                     {
                         var colNum = 0;
-                      //  console.log(property, json.issue.properties[property]);
                         for (var x = userPropsStartAtCol; x <= currCol; x++){
                             var header = property;
                             if(header.includes("__x0020__"))
@@ -446,12 +365,9 @@ export class ExcelExporter{
                                 header = header.replaceAll("__x0020__"," ");
                             }
                             ws.getCell(1,currCol).value = "properties." + header;
-                         //   console.log(`Adding property to excel named ${header}` );
-                         //   console.log("properties." + header);
                             ws.getCell(currRow, currCol).value = json.issue.properties[property];
                             if (ws.getCell(1,currCol).note === undefined){
                                 ws.getCell(1,currCol).note = typeof json.issue.properties[property];
-                                //console.log ("property typeof=",typeof json.issue.properties[property]);
                             }
                             currCol++;
                         }
@@ -465,7 +381,7 @@ export class ExcelExporter{
             }
 
         }
-        // double check we go some data
+        // double check we got some data
         if (gotData === false){
             statusUpdates("No exportable form instances were found");
             loggingData.push(<div className="errRow">No exportable form instances were found</div>);
@@ -478,7 +394,7 @@ export class ExcelExporter{
         // all forms have been matched and exported.
         // check to see if we need to export comments also
         if (gotData && exportComments)
-        { //new__x0020__number
+        { 
             //loop through the forms in column a and get the comments from the API.
             var lastCol = currCol-1;
             var x = 2;
@@ -527,10 +443,8 @@ export class ExcelExporter{
 
     public static async getUsersEmailFromGuid(userGuid:string, projectId:string, accessToken:any){
         if(userGuid === null){
-            console.log("Something odd has happened");
             return "Check your issue!";
         }
-        //const accessToken = await IMSLoginProper.getAccessTokenForBentleyAPI();
         const response = await fetch(`https://api.bentley.com/projects/${projectId}/members/${userGuid}`, {
                 mode: 'cors',
                 headers: {
@@ -538,7 +452,6 @@ export class ExcelExporter{
                     'Authorization': accessToken,
                   },
             })
-         //   console.log("queried for use ", `https://api.bentley.com/projects/${projectId}/members/${userGuid}`);
             const data = await response;
             if (data.status === 404)
             {
@@ -547,7 +460,6 @@ export class ExcelExporter{
             }
             
             const json = await data.json();
-         //   console.log("member ",json);
             if ("member" in json){
                 if ("email" in json.member)
                 {
@@ -630,8 +542,6 @@ export class ExcelExporter{
           "projectGuid" : this.newGUIDfromBytesArray(projectGUID),
           "instanceGuid" : this.newGUIDfromBytesArray(instanceGUID)
         }
-        //console.log("got projectGuid of",obj.projectGuid);
-        //console.log("got instanceGUID of",obj.instanceGuid);
         return obj;
       }
 
