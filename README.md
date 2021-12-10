@@ -4,12 +4,11 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Environment Variables
 
-Prior to running the app, add a valid contextId and iModelId for your user in the .env file:
+Prior to running the app, update the AuthorizationClient.ts file with your app id and scopes. Not minimal scopes below:
 
 ```
-# ---- Test ids ----
-IMJS_CONTEXT_ID = ""
-IMJS_IMODEL_ID = ""
+    const scope = "itwinjs email openid profile organization issues:modify issues:read projects:read urlps-third-party users:read";
+    const clientId = "spa-xxxxxxxxxxxx";
 ```
 
 You can also replace the OIDC client data in this file with your own if you'd prefer.
