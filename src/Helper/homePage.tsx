@@ -1,6 +1,6 @@
 // @ts-nocheck
 import {Button,  Checkbox } from '@itwin/itwinui-react';
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { ExcelExporter } from './excelExport';
 import { ExcelImporter } from './excelImport';
 
@@ -30,7 +30,7 @@ function MyHomePage({selectedProjectId, selectedFormsId, selectedFormsType, verb
     projId = selectedProjectId;
     formId = selectedFormsId;
     const info:JSX.Element[]= [];
-    const working:JSX.Element[]= [];
+    //const working:JSX.Element[]= [];
  
     if (selectedProjectId.trim() === "")
     {

@@ -15,7 +15,7 @@ export class ExcelExporter{
         loggingData.push(<div><h1>Logger results</h1></div>);
         loggingData.push(<div>Grabbing up to date token</div>);
         const accessToken = await (await AuthorizationClient.oidcClient.getAccessToken()).toTokenString();
-        const accessTokenTime = await (await AuthorizationClient.oidcClient.getAccessToken()).getStartsAt();
+        //const accessTokenTime = await (await AuthorizationClient.oidcClient.getAccessToken()).getStartsAt();
         if(verboseLogging){console.log(`Got accesstoken ${accessToken}`)};
         var urlToQuery : string = `https://api.bentley.com/issues/?top=50&projectId=${projectId}&type=${formType}`;
         while (formTypeLooper) {

@@ -1,10 +1,16 @@
-# Getting Started with Create React App
+# Issues Export Import
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is an example that shows how you can export the issues, from the Issue Resolution Service, to excel using a 3rd party library.
+
+It also allows a structured format spreadsheet (preferably using the export tool) to be imported into the system creating new issues or updating existing ones.
+
+It contains no retry logic and minimal logging/error handling and uses a 3rd party library.
+
+This sample is provided as is without warranty of any kind and it use is at your own risk. 
 
 ## Environment Variables
 
-Prior to running the app, update the AuthorizationClient.ts file with your app id and scopes. Not minimal scopes below:
+Prior to running the app, update the AuthorizationClient.ts file with your app id and optional extra scopes. Note minimal scopes shown below:
 
 ```
     const scope = "itwinjs email openid profile organization issues:modify issues:read projects:read urlps-third-party users:read";
@@ -31,7 +37,6 @@ Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
 ### `npm run build`
-
 Builds the app for production to the `build` folder.\
 It correctly bundles React in production mode and optimizes the build for the best performance.
 

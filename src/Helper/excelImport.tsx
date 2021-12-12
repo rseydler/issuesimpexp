@@ -1,8 +1,7 @@
 // @ts-nocheck
 
 import * as Excel from 'exceljs';
-import React, { useCallback } from 'react';
-import { tokenToString } from 'typescript';
+import React from 'react';
 import AuthorizationClient from '../AuthorizationClient';
 
 interface LooseObject {
@@ -13,13 +12,12 @@ export class ExcelImporter{
 
     public static async importIssuesFromExcel(selectedFile:FileReader, selectedProject:string, selectedFormTemplate:string, statusUpdates:any, logger:any, verboseLogging:boolean){
         const accessToken = await (await AuthorizationClient.oidcClient.getAccessToken()).toTokenString();
-        const accessTokenTime = await (await AuthorizationClient.oidcClient.getAccessToken()).getStartsAt();
         const timeStarted = new Date();
         const timeStartedHolder = timeStarted.toLocaleTimeString([],{hour: '2-digit', minute: '2-digit', second: '2-digit'});
         var errorCount = 0;
         var processCount = 0;
         const loggingData:JSX.Element[] = [];
-        const wb = new Excel.Workbook;
+        const wb = new Excel.Workbook();
         const buffer = selectedFile.result;        
         statusUpdates("Loading file");
         loggingData.push(<div>Started Processing at {timeStartedHolder}</div>);
@@ -33,7 +31,7 @@ export class ExcelImporter{
             var currColumn =1;
             var currRow =2;
             var logColumn = 1;
-            var x = 1;
+            //var x = 1;
             statusUpdates("Locating the logging column");
             loggingData.push(<div>Locating the logging column</div>);
             //find the column to log stuff into
