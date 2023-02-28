@@ -8,7 +8,7 @@ import {  Header, HeaderBreadcrumbs, HeaderButton, HeaderLogo, IconButton,  Menu
 import { ProjectData } from "./Helper/ProjectData";
 import {ThemeButton} from "./Helper/ThemeButton"
 import MyHomePage from "./Helper/homePage"
-import { Checkbox, UnderlinedButton } from "@bentley/ui-core";
+import { Checkbox, Icon, UnderlinedButton } from "@bentley/ui-core";
 
 const App: React.FC = () => {
   const [isAuthorized, setIsAuthorized] = useState(
@@ -260,7 +260,10 @@ useEffect(() =>  {
             ]}
           />
         }
-        actions={[<ThemeButton key="themeSwitched" />]}
+        actions={
+          [ <><a href="https://cohesivegroup.com/" target="_blank" > <img src="/Cohesive_Logo_Black-1.png"/> </a> </>,
+          <ThemeButton key="themeSwitched" />]
+        }
         userIcon={
           <IconButton styleType="borderless"  onClick={() => {isAuthorized ? onLogoutClick() : onLoginClick()} }>
             <UserIcon
