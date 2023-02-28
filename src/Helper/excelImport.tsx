@@ -114,14 +114,14 @@ export class ExcelImporter{
                 }
                 //#endregion
 
-                //figure out who the assignee is.
-                if(verboseLogging){console.log("Assignee email type:",typeof data.assignee.email)};
-                if(typeof data.assignee.email == "undefined"){
-                    if(verboseLogging){console.log("Cleaning out assignee completely")};
-                    delete data.assignee
-                }
                 if("assignee" in data){
                     if ("email" in data.assignee){
+                        //figure out who the assignee is.
+                        if(verboseLogging){console.log("Assignee email type:",typeof data.assignee.email)};
+                        if(typeof data.assignee.email == "undefined"){
+                            if(verboseLogging){console.log("Cleaning out assignee completely")};
+                            delete data.assignee
+                        }
                         if(typeof(data.assignee.email) === "object" && "hyperlink" in data.assignee.email){
                             //bloody hyperlinks!
                             const tmpEmail = data.assignee.email.text;

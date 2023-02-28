@@ -231,6 +231,7 @@ useEffect(() =>  {
     const bodyData: JSX.Element[] = [];
     bodyData.push(<h1 key="settingsPage">Optional Settings</h1>);
     bodyData.push(<Checkbox label="Enable Logging to Console" defaultChecked={verboseLogging} key="verboseLogging" onChange={() => setVerboseLogging(!verboseLogging)} />);
+    bodyData.push(<h3><a href={`${window.location.origin}/Formsloader.docx`}>Download Guide</a></h3>)
     setbodyData(bodyData);
   }
 },[sideBarChosen, formLabel, projectLabel, verboseLogging])
